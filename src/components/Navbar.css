@@ -1,0 +1,310 @@
+.navbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+
+  z-index: 100;
+
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 28px 6%;
+}
+
+.navbar-logo {
+  color: #fff;
+
+  font-size: 25px;
+  font-weight: 700;
+
+  letter-spacing: 3px;
+}
+
+.navbar-logo span {
+  color: #d7a35d;
+}
+
+.navbar-menu {
+  display: flex;
+  align-items: center;
+
+  gap: 34px;
+}
+
+.navbar-menu a {
+  position: relative;
+
+  color: rgba(255, 255, 255, 0.85);
+
+  font-size: 12px;
+  font-weight: 500;
+
+  letter-spacing: 1.5px;
+
+  text-transform: uppercase;
+
+  transition: 0.3s;
+}
+
+.navbar-menu a::after {
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+  bottom: -8px;
+
+  width: 0;
+  height: 1px;
+
+  background: #d7a35d;
+
+  transition: 0.3s;
+}
+
+.navbar-menu a:hover {
+  color: #d7a35d;
+}
+
+.navbar-menu a:hover::after {
+  width: 100%;
+}
+
+.navbar-button {
+  padding: 12px 21px;
+
+  border: 1px solid rgba(255, 255, 255, 0.45);
+
+  color: #fff;
+
+  font-size: 10px;
+  font-weight: 600;
+
+  letter-spacing: 1.5px;
+
+  text-transform: uppercase;
+
+  transition: 0.3s;
+}
+
+.navbar-button:hover {
+  background: #fff;
+  border-color: #fff;
+
+  color: #111;
+}
+
+
+/* =====================================================
+   HAMBURGER BUTTON
+===================================================== */
+
+.navbar-toggle {
+  display: none;
+
+  width: 42px;
+  height: 42px;
+
+  padding: 10px;
+
+  border: 1px solid rgba(255, 255, 255, 0.18);
+
+  background: transparent;
+
+  cursor: pointer;
+
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  gap: 5px;
+
+  z-index: 101;
+}
+
+.navbar-toggle span {
+  display: block;
+
+  width: 20px;
+  height: 1.5px;
+
+  background: #fff;
+
+  transition: 0.3s ease;
+}
+
+
+/* =====================================================
+   TABLET
+===================================================== */
+
+@media (max-width: 1000px) {
+
+  .navbar {
+    padding: 22px 5%;
+  }
+
+  .navbar-menu {
+    gap: 18px;
+  }
+
+  .navbar-menu a {
+    font-size: 10px;
+  }
+
+  .navbar-button {
+    padding: 10px 15px;
+
+    font-size: 9px;
+  }
+}
+
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media (max-width: 800px) {
+
+  .navbar {
+    padding: 20px 5%;
+  }
+
+  /* Book Table button hide */
+  .navbar-button {
+    display: none;
+  }
+
+  /* Hamburger show */
+  .navbar-toggle {
+    display: flex;
+  }
+
+  /* Mobile menu */
+  .navbar-menu {
+    position: absolute;
+
+    top: calc(100% + 10px);
+
+    left: 5%;
+    right: 5%;
+
+    display: flex;
+
+    flex-direction: column;
+    align-items: stretch;
+
+    gap: 0;
+
+    padding: 8px;
+
+    background: rgba(10, 10, 10, 0.97);
+
+    border: 1px solid rgba(255, 255, 255, 0.12);
+
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+
+    opacity: 0;
+    visibility: hidden;
+
+    transform: translateY(-15px);
+
+    transition:
+      opacity 0.3s ease,
+      visibility 0.3s ease,
+      transform 0.3s ease;
+
+    z-index: 100;
+  }
+
+  /* Open menu */
+  .navbar-menu.active {
+    opacity: 1;
+
+    visibility: visible;
+
+    transform: translateY(0);
+  }
+
+  /* Mobile links */
+  .navbar-menu a {
+    display: block;
+
+    width: 100%;
+
+    padding: 15px 16px;
+
+    border-bottom:
+      1px solid
+      rgba(255, 255, 255, 0.07);
+
+    color:
+      rgba(255, 255, 255, 0.85);
+
+    font-size: 11px;
+
+    letter-spacing: 1.5px;
+  }
+
+  .navbar-menu a:last-child {
+    border-bottom: none;
+  }
+
+  .navbar-menu a::after {
+    display: none;
+  }
+
+  .navbar-menu a:hover {
+    padding-left: 22px;
+
+    color: #d7a35d;
+  }
+
+
+  /* =================================================
+     HAMBURGER → X
+  ================================================= */
+
+  .navbar-toggle.active span:nth-child(1) {
+    transform:
+      translateY(6.5px)
+      rotate(45deg);
+  }
+
+  .navbar-toggle.active span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .navbar-toggle.active span:nth-child(3) {
+    transform:
+      translateY(-6.5px)
+      rotate(-45deg);
+  }
+}
+
+
+/* =====================================================
+   SMALL MOBILE
+===================================================== */
+
+@media (max-width: 400px) {
+
+  .navbar {
+    padding: 18px 4%;
+  }
+
+  .navbar-logo {
+    font-size: 21px;
+
+    letter-spacing: 2px;
+  }
+
+  .navbar-menu {
+    left: 4%;
+    right: 4%;
+  }
+}

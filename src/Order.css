@@ -1,0 +1,1249 @@
+/* =========================================================
+   ORDER PAGE
+========================================================= */
+
+.order-page {
+  min-height: 100vh;
+  background: #0b0b0b;
+  color: #fff;
+  overflow-x: hidden;
+}
+
+/* =========================================================
+   ORDER HERO
+========================================================= */
+
+.order-hero {
+  position: relative;
+  width: 100%;
+  min-height: 360px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(20, 20, 20, 0.96),
+      rgba(10, 10, 10, 0.9)
+    );
+}
+
+.order-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      circle at center,
+      rgba(255, 180, 70, 0.08),
+      transparent 55%
+    );
+  pointer-events: none;
+}
+
+.order-hero-content {
+  position: relative;
+  z-index: 2;
+  width: min(1200px, 92%);
+  text-align: center;
+  padding: 80px 20px 60px;
+}
+
+.order-hero-label {
+  display: inline-block;
+  margin-bottom: 14px;
+  color: #d9a441;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+.order-hero-title {
+  margin: 0;
+  font-size: clamp(42px, 6vw, 76px);
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: -2px;
+  color: #fff;
+}
+
+/* =========================================================
+   MAIN ORDER AREA
+========================================================= */
+
+.order-main {
+  width: min(1200px, 92%);
+  margin: 0 auto;
+  padding: 70px 0 100px;
+
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(340px, 0.75fr);
+  gap: 40px;
+  align-items: start;
+}
+
+/* =========================================================
+   FORM SECTION
+========================================================= */
+
+.order-form-section {
+  width: 100%;
+  min-width: 0;
+}
+
+.order-section-heading {
+  margin-bottom: 28px;
+}
+
+.order-section-heading .section-label {
+  display: inline-block;
+  margin-bottom: 10px;
+  color: #d9a441;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.order-section-heading h2 {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(26px, 3vw, 38px);
+  line-height: 1.2;
+  font-weight: 600;
+}
+
+/* =========================================================
+   ORDER FORM
+========================================================= */
+
+.order-form {
+  width: 100%;
+}
+
+.order-form-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.order-field {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.order-field label {
+  color: #d0d0d0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.order-field input {
+  width: 100%;
+  height: 52px;
+  box-sizing: border-box;
+
+  padding: 0 16px;
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+
+  outline: none;
+
+  background: rgba(255, 255, 255, 0.045);
+  color: #fff;
+
+  font-size: 14px;
+
+  transition:
+    border-color 0.25s ease,
+    background 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.order-field input::placeholder {
+  color: rgba(255, 255, 255, 0.38);
+}
+
+.order-field input:focus {
+  border-color: rgba(217, 164, 65, 0.8);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 0 0 3px rgba(217, 164, 65, 0.08);
+}
+
+/* =========================================================
+   DELIVERY CALCULATION
+========================================================= */
+
+.delivery-calculation {
+  width: 100%;
+  margin-top: 24px;
+  margin-bottom: 28px;
+}
+
+.delivery-calculating,
+.delivery-calculated,
+.delivery-error {
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 10px;
+}
+
+.delivery-calculating {
+  min-height: 64px;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 14px 16px;
+
+  background: rgba(217, 164, 65, 0.06);
+  border: 1px solid rgba(217, 164, 65, 0.16);
+
+  color: #ddd;
+  font-size: 13px;
+}
+
+.delivery-loader {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  border-top-color: #d9a441;
+  border-radius: 50%;
+
+  animation: deliverySpin 0.8s linear infinite;
+}
+
+@keyframes deliverySpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.delivery-calculated {
+  padding: 18px;
+
+  background: rgba(35, 120, 75, 0.08);
+  border: 1px solid rgba(70, 180, 110, 0.2);
+}
+
+.delivery-info {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.delivery-info > div {
+  min-width: 0;
+  padding: 14px;
+
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.delivery-info span {
+  display: block;
+  margin-bottom: 6px;
+
+  color: #929292;
+  font-size: 11px;
+
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.delivery-info strong {
+  display: block;
+
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.delivery-error {
+  padding: 14px 16px;
+
+  color: #ff9b9b;
+
+  background: rgba(255, 70, 70, 0.07);
+  border: 1px solid rgba(255, 70, 70, 0.18);
+
+  font-size: 13px;
+}
+
+/* =========================================================
+   PAYMENT
+========================================================= */
+
+.payment-section {
+  width: 100%;
+  margin-top: 30px;
+}
+
+.payment-section h3 {
+  margin: 0 0 14px;
+
+  color: #fff;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.payment-options {
+  width: 100%;
+}
+
+.payment-option {
+  width: 100%;
+  min-height: 70px;
+
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+
+  gap: 14px;
+  padding: 14px 16px;
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+
+  background: rgba(255, 255, 255, 0.035);
+  color: #fff;
+
+  cursor: pointer;
+
+  transition:
+    border-color 0.25s ease,
+    background 0.25s ease,
+    transform 0.25s ease;
+}
+
+.payment-option:hover {
+  transform: translateY(-1px);
+  border-color: rgba(217, 164, 65, 0.4);
+}
+
+.payment-option.active {
+  border-color: rgba(217, 164, 65, 0.8);
+  background: rgba(217, 164, 65, 0.08);
+}
+
+.payment-icon {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: rgba(217, 164, 65, 0.12);
+  color: #d9a441;
+  font-size: 26px;
+  line-height: 1;
+}
+
+.payment-option > div:nth-child(2) {
+  flex: 1;
+  min-width: 0;
+}
+
+.payment-option strong {
+  display: block;
+  margin-bottom: 4px;
+
+  color: #fff;
+  font-size: 14px;
+}
+
+.payment-option small {
+  color: #888;
+  font-size: 12px;
+}
+
+.payment-check {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 22px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 50%;
+
+  color: transparent;
+  font-size: 12px;
+}
+
+.payment-option.active .payment-check {
+  border-color: #d9a441;
+  background: #d9a441;
+  color: #111;
+}
+
+/* =========================================================
+   PLACE ORDER BUTTON
+========================================================= */
+
+.place-order-btn {
+  width: 100%;
+  min-height: 58px;
+
+  margin-top: 26px;
+  padding: 0 24px;
+
+  border: 0;
+  border-radius: 9px;
+
+  background: #d9a441;
+  color: #111;
+
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.25s ease,
+    background 0.25s ease,
+    opacity 0.25s ease;
+}
+
+.place-order-btn:hover {
+  background: #e8b45a;
+  transform: translateY(-2px);
+}
+
+.place-order-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* =========================================================
+   ORDER SUMMARY
+========================================================= */
+
+.order-summary {
+  width: 100%;
+  min-width: 0;
+
+  box-sizing: border-box;
+
+  padding: 26px;
+
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 14px;
+
+  background: rgba(255, 255, 255, 0.035);
+
+  position: sticky;
+  top: 30px;
+}
+
+.order-summary-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 15px;
+
+  padding-bottom: 20px;
+
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.order-summary-header h2 {
+  margin: 0;
+
+  color: #fff;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.order-summary-header span {
+  color: #999;
+  font-size: 12px;
+}
+
+/* =========================================================
+   ORDER ITEMS - FIXED
+========================================================= */
+
+.order-items {
+  width: 100%;
+  min-width: 0;
+}
+
+.order-item {
+  width: 100%;
+  min-width: 0;
+
+  box-sizing: border-box;
+
+  display: grid;
+
+  /*
+    IMAGE | ITEM INFO | TOTAL PRICE
+  */
+  grid-template-columns: 82px minmax(0, 1fr) 78px;
+
+  align-items: center;
+
+  column-gap: 16px;
+
+  padding: 18px 2px;
+
+  margin: 0;
+
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* =========================================================
+   ITEM IMAGE
+========================================================= */
+
+.order-item > img {
+  width: 82px !important;
+  height: 82px !important;
+
+  min-width: 82px;
+  min-height: 82px;
+
+  display: block;
+
+  object-fit: cover;
+
+  border-radius: 10px;
+
+  background: #181818;
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  flex-shrink: 0;
+}
+
+/* =========================================================
+   ITEM INFORMATION
+========================================================= */
+
+.order-item-info {
+  width: 100%;
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: flex-start;
+  justify-content: center;
+
+  overflow: hidden;
+}
+
+.order-item-info h3 {
+  width: 100%;
+  min-width: 0;
+
+  margin: 0 0 6px;
+
+  color: #fff;
+
+  font-size: 15px;
+  font-weight: 600;
+
+  line-height: 1.3;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.order-item-info > p {
+  margin: 0 0 10px;
+
+  color: #999;
+
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+/* =========================================================
+   QUANTITY CONTROL - FIXED
+========================================================= */
+
+.order-quantity {
+  width: fit-content;
+  height: 34px;
+
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgba(255, 255, 255, 0.16);
+
+  border-radius: 7px;
+
+  overflow: hidden;
+
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.order-quantity button {
+  width: 34px;
+  height: 34px;
+
+  min-width: 34px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: 0;
+
+  background: rgba(255, 255, 255, 0.05);
+
+  color: #fff;
+
+  font-size: 18px;
+  line-height: 1;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.order-quantity button:hover {
+  background: rgba(217, 164, 65, 0.18);
+  color: #d9a441;
+}
+
+.order-quantity span {
+  width: 34px;
+  min-width: 34px;
+  height: 34px;
+
+  box-sizing: border-box;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+
+  color: #fff;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  line-height: 1;
+}
+
+/* =========================================================
+   ITEM TOTAL PRICE - FIXED
+========================================================= */
+
+.order-item > strong {
+  width: 78px;
+  min-width: 78px;
+
+  align-self: center;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: flex-end;
+
+  color: #fff;
+
+  font-size: 15px;
+  font-weight: 600;
+
+  line-height: 1;
+
+  text-align: right;
+
+  white-space: nowrap;
+}
+
+/* =========================================================
+   PRICE SUMMARY
+========================================================= */
+
+.order-price-summary {
+  width: 100%;
+  padding-top: 18px;
+}
+
+.order-price-summary > div {
+  width: 100%;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 15px;
+
+  margin-bottom: 12px;
+
+  color: #999;
+
+  font-size: 13px;
+}
+
+.order-price-summary > div strong {
+  color: #ddd;
+  font-weight: 500;
+}
+
+.order-grand-total {
+  margin-top: 18px !important;
+
+  padding-top: 18px;
+
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  color: #fff !important;
+
+  font-size: 17px !important;
+  font-weight: 600;
+}
+
+.order-grand-total strong {
+  color: #d9a441 !important;
+
+  font-size: 20px !important;
+  font-weight: 700 !important;
+}
+
+/* =========================================================
+   SECURE PAYMENT INFO
+========================================================= */
+
+.order-secure {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  margin-top: 18px;
+  padding-top: 16px;
+
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+
+  color: #777;
+
+  font-size: 11px;
+
+  text-align: center;
+}
+
+.order-secure span:first-child {
+  color: #6eb77f;
+  font-size: 13px;
+}
+
+/* =========================================================
+   EMPTY ORDER
+========================================================= */
+
+.order-empty {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  padding: 40px 20px;
+
+  text-align: center;
+
+  color: #888;
+}
+
+.order-empty p {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* =========================================================
+   SUCCESS PAGE
+========================================================= */
+
+.order-success {
+  min-height: 100vh;
+  width: 100%;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  padding: 40px 20px;
+
+  box-sizing: border-box;
+
+  background:
+    radial-gradient(
+      circle at center,
+      rgba(217, 164, 65, 0.08),
+      transparent 45%
+    ),
+    #0b0b0b;
+
+  color: #fff;
+}
+
+.order-success-card {
+  width: min(560px, 100%);
+
+  box-sizing: border-box;
+
+  padding: 42px 34px;
+
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+
+  background: rgba(255, 255, 255, 0.04);
+
+  text-align: center;
+
+  box-shadow:
+    0 25px 80px rgba(0, 0, 0, 0.35);
+}
+
+.success-icon {
+  width: 76px;
+  height: 76px;
+
+  margin: 0 auto 24px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: rgba(80, 190, 110, 0.12);
+
+  border: 1px solid rgba(80, 190, 110, 0.25);
+
+  color: #72d48c;
+
+  font-size: 34px;
+  font-weight: 700;
+}
+
+.order-success-card .section-label {
+  display: block;
+
+  margin-bottom: 10px;
+
+  color: #d9a441;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  letter-spacing: 2px;
+
+  text-transform: uppercase;
+}
+
+.order-success-card h1 {
+  margin: 0 0 14px;
+
+  color: #fff;
+
+  font-size: clamp(30px, 5vw, 46px);
+
+  line-height: 1.1;
+}
+
+.success-message {
+  margin: 0 auto 20px;
+
+  max-width: 450px;
+
+  color: #aaa;
+
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.success-order-id {
+  margin-bottom: 12px;
+
+  color: #888;
+
+  font-size: 13px;
+}
+
+.success-order-id strong {
+  color: #fff;
+}
+
+.success-total {
+  margin: 20px 0;
+
+  color: #fff;
+
+  font-size: 18px;
+}
+
+.success-total strong {
+  color: #d9a441;
+
+  font-size: 25px;
+}
+
+.payment-status {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  padding: 8px 14px;
+
+  border-radius: 30px;
+
+  background: rgba(80, 190, 110, 0.09);
+
+  border: 1px solid rgba(80, 190, 110, 0.2);
+
+  color: #7bd490;
+
+  font-size: 12px;
+
+  font-weight: 600;
+}
+
+.delivery-pending-info {
+  margin-top: 18px;
+
+  padding: 14px 16px;
+
+  border-radius: 8px;
+
+  background: rgba(217, 164, 65, 0.06);
+
+  border: 1px solid rgba(217, 164, 65, 0.14);
+
+  color: #aaa;
+
+  font-size: 12px;
+
+  line-height: 1.6;
+}
+
+.success-actions {
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 12px;
+
+  margin-top: 28px;
+}
+
+.success-btn {
+  min-width: 150px;
+  min-height: 46px;
+
+  padding: 0 18px;
+
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgba(217, 164, 65, 0.45);
+
+  border-radius: 7px;
+
+  background: #d9a441;
+  color: #111;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  text-decoration: none;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.25s ease,
+    background 0.25s ease;
+}
+
+.success-btn:hover {
+  background: #e8b45a;
+  transform: translateY(-2px);
+}
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 900px) {
+  .order-main {
+    grid-template-columns: 1fr;
+
+    gap: 35px;
+
+    padding-top: 50px;
+  }
+
+  .order-summary {
+    position: static;
+  }
+
+  .order-form-row {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 600px) {
+  .order-hero {
+    min-height: 290px;
+  }
+
+  .order-hero-content {
+    padding: 70px 16px 45px;
+  }
+
+  .order-hero-title {
+    font-size: 42px;
+    letter-spacing: -1px;
+  }
+
+  .order-hero-label {
+    font-size: 11px;
+    letter-spacing: 2px;
+  }
+
+  .order-main {
+    width: 92%;
+    padding: 40px 0 70px;
+  }
+
+  .order-form-row {
+    grid-template-columns: 1fr;
+
+    gap: 16px;
+
+    margin-bottom: 16px;
+  }
+
+  .order-section-heading {
+    margin-bottom: 22px;
+  }
+
+  .order-section-heading h2 {
+    font-size: 28px;
+  }
+
+  .order-field input {
+    height: 50px;
+  }
+
+  .delivery-info {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .payment-option {
+    min-height: 64px;
+  }
+
+  .order-summary {
+    padding: 20px 16px;
+    border-radius: 12px;
+  }
+
+  .order-summary-header h2 {
+    font-size: 20px;
+  }
+
+  /* =======================================================
+     MOBILE ORDER ITEM - FIXED
+  ======================================================= */
+
+  .order-item {
+    grid-template-columns: 70px minmax(0, 1fr) 65px;
+
+    column-gap: 12px;
+
+    padding: 16px 2px;
+  }
+
+  .order-item > img {
+    width: 70px !important;
+    height: 70px !important;
+
+    min-width: 70px;
+    min-height: 70px;
+  }
+
+  .order-item-info {
+    min-width: 0;
+  }
+
+  .order-item-info h3 {
+    font-size: 14px;
+  }
+
+  .order-item-info > p {
+    font-size: 12px;
+
+    margin-bottom: 8px;
+  }
+
+  .order-quantity {
+    height: 32px;
+  }
+
+  .order-quantity button {
+    width: 32px;
+    height: 32px;
+
+    min-width: 32px;
+
+    font-size: 17px;
+  }
+
+  .order-quantity span {
+    width: 32px;
+    min-width: 32px;
+
+    height: 32px;
+  }
+
+  .order-item > strong {
+    width: 65px;
+    min-width: 65px;
+
+    font-size: 13px;
+  }
+
+  .success-actions {
+    flex-direction: column;
+  }
+
+  .success-btn {
+    width: 100%;
+  }
+
+  .order-success {
+    padding: 25px 15px;
+  }
+
+  .order-success-card {
+    padding: 34px 20px;
+    border-radius: 14px;
+  }
+
+  .success-icon {
+    width: 66px;
+    height: 66px;
+
+    font-size: 28px;
+  }
+
+  .order-success-card h1 {
+    font-size: 32px;
+  }
+}
+
+/* =========================================================
+   SMALL MOBILE
+========================================================= */
+
+@media (max-width: 400px) {
+  .order-main {
+    width: 94%;
+  }
+
+  .order-summary {
+    padding: 18px 12px;
+  }
+
+  .order-item {
+    grid-template-columns: 60px minmax(0, 1fr) 58px;
+
+    column-gap: 9px;
+  }
+
+  .order-item > img {
+    width: 60px !important;
+    height: 60px !important;
+
+    min-width: 60px;
+    min-height: 60px;
+  }
+
+  .order-item-info h3 {
+    font-size: 13px;
+  }
+
+  .order-item-info > p {
+    font-size: 11px;
+  }
+
+  .order-item > strong {
+    width: 58px;
+    min-width: 58px;
+
+    font-size: 12px;
+  }
+
+  .order-quantity {
+    height: 30px;
+  }
+
+  .order-quantity button {
+    width: 30px;
+    height: 30px;
+
+    min-width: 30px;
+  }
+
+  .order-quantity span {
+    width: 30px;
+    min-width: 30px;
+
+    height: 30px;
+  }
+
+  .order-success-card {
+    padding: 28px 16px;
+  }
+}

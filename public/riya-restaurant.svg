@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Gold Gradient -->
+    <linearGradient id="goldGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#8A6421"/>
+      <stop offset="20%" stop-color="#B88E39"/>
+      <stop offset="50%" stop-color="#F2D685"/>
+      <stop offset="80%" stop-color="#C59B42"/>
+      <stop offset="100%" stop-color="#8A6421"/>
+    </linearGradient>
+
+    <!-- Accent Gradient -->
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FCEABB"/>
+      <stop offset="100%" stop-color="#C8963E"/>
+    </linearGradient>
+
+    <!-- Drop Shadow -->
+    <filter id="softShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#5C4212" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+
+  <!-- White Background -->
+  <rect width="512" height="512" fill="#FFFFFF"/>
+
+  <!-- Logo Group -->
+  <g transform="translate(256, 256)" filter="url(#softShadow)">
+    <circle r="225" fill="none" stroke="url(#goldGrad)" stroke-width="5" stroke-dasharray="10,6" opacity="0.5"/>
+    <circle r="208" fill="none" stroke="url(#goldGrad)" stroke-width="7"/>
+    <circle r="195" fill="none" stroke="url(#goldGrad)" stroke-width="2" opacity="0.6"/>
+    <circle r="192" fill="#FAFAF8"/>
+
+    <!-- Star -->
+    <path d="M 0,-172 L 4,-158 L 18,-158 L 7,-150 L 11,-136 L 0,-144 L -11,-136 L -7,-150 L -18,-158 L -4,-158 Z" fill="url(#goldGrad)"/>
+
+    <!-- Monogram R -->
+    <path d="M -48,60 L -48,-75 C -48,-75 -12,-82 16,-75 C 42,-68 55,-48 52,-24 C 49,0 26,14 0,14 L 54,60 L 28,60 L -18,14 L -22,14 L -22,60 Z M -22,-10 L -2,-10 C 16,-10 26,-16 26,-30 C 26,-44 14,-52 -4,-52 L -22,-52 Z" fill="url(#goldGrad)"/>
+
+    <!-- Cloche Arch -->
+    <path d="M -90,30 C -90,-45 -48,-92 0,-92 C 48,-92 90,-45 90,30 Z" fill="none" stroke="url(#goldGrad)" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="0" cy="-97" r="10" fill="url(#accentGrad)"/>
+    <circle cx="0" cy="-97" r="14" fill="none" stroke="url(#goldGrad)" stroke-width="3"/>
+
+    <!-- Fork & Spoon Icons -->
+    <g transform="translate(-115, -15) rotate(-15) scale(1.1)">
+      <path d="M -8,-35 L -8,-15 M -3,-35 L -3,-15 M 3,-35 L 3,-15 M 8,-35 L 8,-15" stroke="url(#goldGrad)" stroke-width="3.5" stroke-linecap="round"/>
+      <path d="M -8,-15 C -8,-2 8,-2 8,-15" fill="none" stroke="url(#goldGrad)" stroke-width="3.5"/>
+      <path d="M 0,-5 L 0,40" stroke="url(#goldGrad)" stroke-width="4" stroke-linecap="round"/>
+      <circle cx="0" cy="44" r="4" fill="url(#goldGrad)"/>
+    </g>
+    <g transform="translate(115, -15) rotate(15) scale(1.1)">
+      <ellipse cx="0" cy="-22" rx="10" ry="16" fill="none" stroke="url(#goldGrad)" stroke-width="3.5"/>
+      <path d="M 0,-6 L 0,40" stroke="url(#goldGrad)" stroke-width="4" stroke-linecap="round"/>
+      <circle cx="0" cy="44" r="4" fill="url(#goldGrad)"/>
+    </g>
+
+    <!-- Bottom Arc & Brand Text -->
+    <path d="M -120,70 Q 0,105 120,70" fill="none" stroke="url(#goldGrad)" stroke-width="3" opacity="0.8"/>
+    <text x="0" y="145" text-anchor="middle" font-family="'Cinzel', 'Playfair Display', serif" font-size="48" font-weight="800" letter-spacing="8" fill="url(#goldGrad)">RIYA</text>
+    <text x="0" y="172" text-anchor="middle" font-family="'Montserrat', sans-serif" font-size="16" font-weight="700" letter-spacing="6" fill="#7A581C">RESTAURANT</text>
+  </g>
+</svg>

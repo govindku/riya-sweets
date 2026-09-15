@@ -1,0 +1,483 @@
+/* =====================================================
+   RIYA RESTAURANT — REGISTER PAGE
+===================================================== */
+
+.register-page {
+  min-height: 100vh;
+  background: #0b0b0b;
+}
+
+/* ================= BACKGROUND ================= */
+
+.register-background {
+  position: relative;
+
+  min-height: 100vh;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 110px 20px 60px;
+
+  overflow: hidden;
+
+  background-image:
+    url("https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=2000&q=90");
+
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
+
+.register-overlay {
+  position: absolute;
+  inset: 0;
+
+  background:
+    radial-gradient(
+      circle at center,
+      rgba(215, 163, 93, 0.08),
+      transparent 45%
+    ),
+    linear-gradient(
+      135deg,
+      rgba(5, 5, 5, 0.97),
+      rgba(5, 5, 5, 0.73),
+      rgba(5, 5, 5, 0.97)
+    );
+}
+
+/* ================= CONTAINER ================= */
+
+.register-container {
+  position: relative;
+  z-index: 2;
+
+  width: 100%;
+  max-width: 480px;
+}
+
+/* ================= CARD ================= */
+
+.register-card {
+  position: relative;
+
+  padding: 46px;
+
+  border: 1px solid rgba(215, 163, 93, 0.18);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(20, 20, 20, 0.95),
+      rgba(10, 10, 10, 0.93)
+    );
+
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+
+  box-shadow:
+    0 35px 90px rgba(0, 0, 0, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+
+  overflow: hidden;
+}
+
+.register-card::before {
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  left: 50%;
+
+  width: 120px;
+  height: 1px;
+
+  transform: translateX(-50%);
+
+  background: #d7a35d;
+
+  box-shadow:
+    0 0 25px rgba(215, 163, 93, 0.6);
+}
+
+/* ================= BRAND ================= */
+
+.register-brand {
+  text-align: center;
+
+  margin-bottom: 30px;
+}
+
+.register-brand span {
+  display: block;
+
+  color: #d7a35d;
+
+  font-size: 25px;
+  font-weight: 700;
+
+  letter-spacing: 4px;
+}
+
+.register-brand p {
+  margin: 7px 0 0;
+
+  color: rgba(255, 255, 255, 0.3);
+
+  font-size: 8px;
+
+  letter-spacing: 2.5px;
+}
+
+/* ================= HEADING ================= */
+
+.register-heading {
+  text-align: center;
+
+  margin-bottom: 30px;
+}
+
+.register-heading small {
+  color: #d7a35d;
+
+  font-size: 8px;
+  font-weight: 700;
+
+  letter-spacing: 2px;
+}
+
+.register-heading h1 {
+  margin: 10px 0 13px;
+
+  color: #fff;
+
+  font-family: "Playfair Display", serif;
+
+  font-size: 45px;
+  font-weight: 500;
+
+  line-height: 1.05;
+}
+
+.register-heading h1 i {
+  color: #d7a35d;
+}
+
+.register-heading p {
+  max-width: 320px;
+
+  margin: 0 auto;
+
+  color: rgba(255, 255, 255, 0.43);
+
+  font-size: 11px;
+
+  line-height: 1.7;
+}
+
+/* ================= FORM ================= */
+
+.register-form {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 17px;
+}
+
+.register-field {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 7px;
+}
+
+.register-field label {
+  color: rgba(255, 255, 255, 0.68);
+
+  font-size: 9px;
+  font-weight: 600;
+
+  letter-spacing: 1.5px;
+
+  text-transform: uppercase;
+}
+
+.register-field input {
+  box-sizing: border-box;
+
+  width: 100%;
+
+  padding: 14px 15px;
+
+  outline: none;
+
+  border: 1px solid rgba(255, 255, 255, 0.11);
+
+  border-radius: 0;
+
+  background: rgba(17, 17, 17, 0.95);
+
+  color: #fff;
+
+  font-family: inherit;
+
+  font-size: 12px;
+
+  transition:
+    border-color 0.3s ease,
+    background 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.register-field input:hover {
+  border-color: rgba(215, 163, 93, 0.28);
+}
+
+.register-field input:focus {
+  border-color: #d7a35d;
+
+  background: #151515;
+
+  box-shadow:
+    0 0 0 3px rgba(215, 163, 93, 0.07),
+    0 8px 25px rgba(0, 0, 0, 0.25);
+}
+
+.register-field input::placeholder {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+/* ================= ERROR ================= */
+
+.register-error {
+  padding: 10px 12px;
+
+  border: 1px solid rgba(255, 80, 80, 0.25);
+
+  background: rgba(120, 20, 20, 0.13);
+
+  color: #ff8585;
+
+  font-size: 10px;
+
+  line-height: 1.5;
+
+  text-align: center;
+}
+
+/* ================= SUCCESS ================= */
+
+.register-success {
+  padding: 10px 12px;
+
+  border: 1px solid rgba(100, 200, 130, 0.25);
+
+  background: rgba(30, 120, 60, 0.12);
+
+  color: #8be09f;
+
+  font-size: 10px;
+
+  line-height: 1.5;
+
+  text-align: center;
+}
+
+/* ================= SUBMIT ================= */
+
+.register-submit {
+  width: 100%;
+
+  margin-top: 5px;
+
+  padding: 16px;
+
+  border: 1px solid #d7a35d;
+
+  background: #d7a35d;
+
+  color: #0b0b0b;
+
+  font-family: inherit;
+
+  font-size: 10px;
+
+  font-weight: 700;
+
+  letter-spacing: 1.7px;
+
+  text-transform: uppercase;
+
+  cursor: pointer;
+
+  transition:
+    background 0.35s ease,
+    color 0.35s ease,
+    transform 0.35s ease,
+    box-shadow 0.35s ease;
+}
+
+.register-submit:hover {
+  background: transparent;
+
+  color: #d7a35d;
+
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 12px 30px rgba(0, 0, 0, 0.3);
+}
+
+.register-submit:active {
+  transform: translateY(0);
+}
+
+/* ================= LOGIN ================= */
+
+.register-login {
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 6px;
+
+  margin-top: 25px;
+}
+
+.register-login p {
+  margin: 0;
+
+  color: rgba(255, 255, 255, 0.4);
+
+  font-size: 10px;
+}
+
+.register-login button {
+  padding: 0;
+
+  border: 0;
+
+  background: transparent;
+
+  color: #d7a35d;
+
+  font-family: inherit;
+
+  font-size: 10px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    color 0.3s ease,
+    letter-spacing 0.3s ease;
+}
+
+.register-login button:hover {
+  color: #fff;
+
+  letter-spacing: 0.4px;
+}
+
+/* ================= FOOTER ================= */
+
+.register-footer {
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  gap: 6px;
+
+  margin-top: 28px;
+
+  padding-top: 22px;
+
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.register-footer span {
+  color: #d7a35d;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  letter-spacing: 3px;
+}
+
+.register-footer p {
+  margin: 0;
+
+  color: rgba(255, 255, 255, 0.23);
+
+  font-size: 8px;
+
+  letter-spacing: 1.5px;
+}
+
+/* ================= MOBILE ================= */
+
+@media (max-width: 600px) {
+  .register-background {
+    padding: 95px 15px 40px;
+
+    background-attachment: scroll;
+  }
+
+  .register-card {
+    padding: 38px 22px;
+  }
+
+  .register-brand {
+    margin-bottom: 25px;
+  }
+
+  .register-brand span {
+    font-size: 21px;
+
+    letter-spacing: 3px;
+  }
+
+  .register-heading {
+    margin-bottom: 26px;
+  }
+
+  .register-heading h1 {
+    font-size: 39px;
+  }
+
+  .register-form {
+    gap: 15px;
+  }
+
+  .register-field input {
+    padding: 13px 14px;
+  }
+
+  .register-submit {
+    padding: 15px;
+  }
+}
+
+/* ================= SMALL MOBILE ================= */
+
+@media (max-width: 380px) {
+  .register-background {
+    padding: 90px 12px 30px;
+  }
+
+  .register-card {
+    padding: 32px 18px;
+  }
+
+  .register-heading h1 {
+    font-size: 35px;
+  }
+}
