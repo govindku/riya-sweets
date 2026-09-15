@@ -442,7 +442,7 @@ function Order() {
       // =================================================
 
       const response = await fetch(
-        "http://127.0.0.1:5000/create-order",
+        "https://riya-sweets.onrender.com/create-order",
         {
           method: "POST",
 
@@ -522,7 +522,7 @@ function Order() {
             // =============================================
 
             const verifyResponse = await fetch(
-              "http://127.0.0.1:5000/verify-payment",
+              "https://riya-sweets.onrender.com/verify-payment",
               {
                 method: "POST",
 
