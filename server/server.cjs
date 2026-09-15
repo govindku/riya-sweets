@@ -337,7 +337,7 @@ START SERVER
 =================================
 */
 
-app.listen(process.env.PORT || 5000, "127.0.0.1", () => {
+app.listen(process.env.PORT || 5000, "0.0.0.0", () => {
   console.log(
     `Razorpay server running on http://127.0.0.1:${process.env.PORT || 5000}`,
   );
