@@ -399,7 +399,7 @@ function Home() {
       <section className="about-preview">
         <div className="about-image">
           <img
-            src="../public/images/riya-2.jpeg"
+            src="/images/riya-2.jpeg"
             alt={`${restaurantSettings.restaurantName} interior`}
           />
         </div>
