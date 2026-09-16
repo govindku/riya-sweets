@@ -1624,7 +1624,7 @@ select:focus:not(:focus-visible) {
 
   overflow: hidden;
 
-  background-image: url("/public/images/riya-2.jpeg");
+  background-image: url("/images/riya-2.jpeg");
 
   background-size: cover;
   background-position: center;
