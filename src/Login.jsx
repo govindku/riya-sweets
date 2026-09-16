@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { gsap } from "gsap";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import { supabase } from "./lib/supabase";
 
 function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -16,6 +17,10 @@ function Login() {
   });
 
   const [error, setError] = useState("");
+
+  // =========================
+  // GSAP ANIMATION
+  // =========================
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -72,6 +77,10 @@ function Login() {
     return () => ctx.revert();
   }, []);
 
+  // =========================
+  // INPUT CHANGE
+  // =========================
+
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -82,6 +91,10 @@ function Login() {
 
     setError("");
   };
+
+  // =========================
+  // LOGIN
+  // =========================
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -98,7 +111,10 @@ function Login() {
       setLoading(true);
       setError("");
 
-      // Supabase Auth Login
+      // =========================
+      // SUPABASE LOGIN
+      // =========================
+
       const { data: authData, error: authError } =
         await supabase.auth.signInWithPassword({
           email,
@@ -106,13 +122,17 @@ function Login() {
         });
 
       if (authError) {
+        console.error("Auth error:", authError);
         setError("Invalid email or password.");
         return;
       }
 
       const authUser = authData.user;
 
-      // Get customer profile from users table
+      // =========================
+      // GET USER PROFILE
+      // =========================
+
       const { data: profile, error: profileError } = await supabase
         .from("users")
         .select("*")
@@ -123,7 +143,10 @@ function Login() {
         console.error("Profile fetch error:", profileError);
       }
 
-      // Create logged-in customer object
+      // =========================
+      // SAVE LOGGED-IN USER
+      // =========================
+
       const loggedInUser = {
         id: profile?.id || authUser?.id || null,
         authId: authUser?.id || null,
@@ -132,18 +155,38 @@ function Login() {
         email: profile?.email || authUser?.email || email,
         city: profile?.city || "",
         address: profile?.address || "",
-        createdAt: profile?.created_at || new Date().toISOString(),
+        createdAt:
+          profile?.created_at || new Date().toISOString(),
       };
 
-      // Save for existing website compatibility
       localStorage.setItem(
         "riyaLoggedInUser",
         JSON.stringify(loggedInUser),
       );
 
+      // Notify other components
       window.dispatchEvent(new Event("riyaLoginUpdated"));
 
-      navigate("/my-account");
+      // =========================
+      // REDIRECT AFTER LOGIN
+      // =========================
+
+      const redirectTo = location.state?.from;
+
+      // Support query redirect also
+      const queryRedirect = new URLSearchParams(
+        window.location.search,
+      ).get("redirect");
+
+      if (redirectTo === "/order" || queryRedirect === "order") {
+        navigate("/order", {
+          replace: true,
+        });
+      } else {
+        navigate("/my-account", {
+          replace: true,
+        });
+      }
     } catch (err) {
       console.error("Login error:", err);
       setError("Something went wrong. Please try again.");
@@ -174,11 +217,17 @@ function Login() {
               </h1>
 
               <p>
-                Sign in to your account and continue your Riya experience.
+                Sign in to your account and continue your Riya
+                experience.
               </p>
             </div>
 
-            <form className="login-form" onSubmit={handleSubmit}>
+            <form
+              className="login-form"
+              onSubmit={handleSubmit}
+            >
+              {/* EMAIL */}
+
               <div className="login-field">
                 <label>Email Address</label>
 
@@ -192,6 +241,8 @@ function Login() {
                   disabled={loading}
                 />
               </div>
+
+              {/* PASSWORD */}
 
               <div className="login-field">
                 <label>Password</label>
@@ -210,7 +261,9 @@ function Login() {
                   <button
                     type="button"
                     className="password-toggle"
-                    onClick={() => setShowPassword(!showPassword)}
+                    onClick={() =>
+                      setShowPassword(!showPassword)
+                    }
                     disabled={loading}
                   >
                     {showPassword ? "HIDE" : "SHOW"}
@@ -218,31 +271,52 @@ function Login() {
                 </div>
               </div>
 
-              {error && <p className="login-error">{error}</p>}
+              {/* ERROR */}
+
+              {error && (
+                <p className="login-error">
+                  {error}
+                </p>
+              )}
+
+              {/* OPTIONS */}
 
               <div className="login-options">
                 <label className="remember-me">
                   <input type="checkbox" />
+
                   <span>Remember me</span>
                 </label>
 
-                <a href="#forgot">Forgot Password?</a>
+                <a href="#forgot">
+                  Forgot Password?
+                </a>
               </div>
+
+              {/* LOGIN BUTTON */}
 
               <button
                 type="submit"
                 className="login-submit"
                 disabled={loading}
               >
-                {loading ? "Signing In..." : "Sign In →"}
+                {loading
+                  ? "Signing In..."
+                  : "Sign In →"}
               </button>
             </form>
 
+            {/* DIVIDER */}
+
             <div className="login-divider">
               <span></span>
+
               <p>OR</p>
+
               <span></span>
             </div>
+
+            {/* REGISTER */}
 
             <div className="login-create">
               <p>Don't have an account?</p>
@@ -255,9 +329,14 @@ function Login() {
               </button>
             </div>
 
+            {/* FOOTER */}
+
             <div className="login-footer">
               <span>RIYA.</span>
-              <p>Good food. Great moments.</p>
+
+              <p>
+                Good food. Great moments.
+              </p>
             </div>
           </div>
         </div>

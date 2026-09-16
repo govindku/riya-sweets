@@ -1,10 +1,7 @@
 import { useEffect, useState } from "react";
-
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-
 import Navbar from "./components/Navbar";
-import { supabase } from "./lib/supabase";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -19,7 +16,6 @@ function Contact() {
 
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -88,10 +84,9 @@ function Contact() {
     }));
 
     setSubmitted(false);
-    setErrorMessage("");
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
 
     if (
@@ -105,61 +100,10 @@ function Contact() {
       return;
     }
 
-    try {
-      setSubmitting(true);
-      setSubmitted(false);
-      setErrorMessage("");
+    setSubmitting(true);
+    setSubmitted(false);
 
-      const newMessage = {
-        name: formData.name.trim(),
-        phone: formData.phone.trim(),
-        email: formData.email.trim(),
-        subject: formData.subject,
-        message: formData.message.trim(),
-        status: "New",
-      };
-
-      const { data, error } = await supabase
-        .from("messages")
-        .insert([newMessage])
-        .select()
-        .single();
-
-      if (error) {
-        console.error("Message submit error:", error);
-        setErrorMessage(
-          "Message send nahi ho saka. Please try again."
-        );
-        return;
-      }
-
-      // Keep localStorage updated for compatibility
-      const existingMessages = JSON.parse(
-        localStorage.getItem("riyaMessages") || "[]"
-      );
-
-      const localMessage = {
-        id:
-          data?.id ||
-          "MSG-" + Date.now().toString().slice(-6),
-        name: newMessage.name,
-        phone: newMessage.phone,
-        email: newMessage.email,
-        subject: newMessage.subject,
-        message: newMessage.message,
-        status: newMessage.status,
-        createdAt:
-          data?.created_at || new Date().toISOString(),
-      };
-
-      localStorage.setItem(
-        "riyaMessages",
-        JSON.stringify([...existingMessages, localMessage])
-      );
-
-      // Notify Admin Messages if it is open in the same tab
-      window.dispatchEvent(new Event("riyaMessagesUpdated"));
-
+    setTimeout(() => {
       setFormData({
         name: "",
         phone: "",
@@ -168,16 +112,9 @@ function Contact() {
         message: "",
       });
 
-      setSubmitted(true);
-    } catch (error) {
-      console.error("Contact form error:", error);
-
-      setErrorMessage(
-        "Something went wrong. Please try again."
-      );
-    } finally {
       setSubmitting(false);
-    }
+      setSubmitted(true);
+    }, 700);
   };
 
   return (
@@ -211,7 +148,9 @@ function Contact() {
       {/* CONTACT INFO */}
       <section className="contact-info-section">
         <div className="contact-section-heading">
-          <p className="section-label">WE ARE HERE FOR YOU</p>
+          <p className="section-label">
+            WE ARE HERE FOR YOU
+          </p>
 
           <h2>
             Let's start a
@@ -305,141 +244,7 @@ function Contact() {
         </div>
       </section>
 
-      {/* CONTACT FORM */}
-      <section className="contact-main">
-        <div className="contact-form-content">
-          <p className="section-label">SEND A MESSAGE</p>
-
-          <h2>
-            We'd love to
-            <br />
-            <i>hear from you.</i>
-          </h2>
-
-          <p>
-            Whether you're planning a special celebration, have a
-            question about our menu or simply want to connect, send
-            us a message.
-          </p>
-
-          <div className="contact-form-note">
-            <span>RIYA SWEETS.</span>
-            <small>Fresh sweets. Great moments.</small>
-          </div>
-        </div>
-
-        <div className="contact-form-wrapper">
-          <form
-            className="contact-form"
-            onSubmit={handleSubmit}
-          >
-            <div className="form-row">
-              <div className="form-group">
-                <label>Your Name</label>
-
-                <input
-                  type="text"
-                  name="name"
-                  placeholder="Enter your name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  disabled={submitting}
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Phone Number</label>
-
-                <input
-                  type="tel"
-                  name="phone"
-                  placeholder="+91 XXXXX XXXXX"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  disabled={submitting}
-                />
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label>Email Address</label>
-
-              <input
-                type="email"
-                name="email"
-                placeholder="your@email.com"
-                value={formData.email}
-                onChange={handleChange}
-                disabled={submitting}
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Subject</label>
-
-              <select
-                name="subject"
-                value={formData.subject}
-                onChange={handleChange}
-                disabled={submitting}
-              >
-                <option value="" disabled>
-                  Select a subject
-                </option>
-
-                <option value="Party Booking">
-                  Party Booking
-                </option>
-
-                <option value="Order Enquiry">
-                  Order Enquiry
-                </option>
-
-                <option value="General Enquiry">
-                  General Enquiry
-                </option>
-
-                <option value="Feedback">
-                  Feedback
-                </option>
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label>Your Message</label>
-
-              <textarea
-                rows="6"
-                name="message"
-                placeholder="Write your message..."
-                value={formData.message}
-                onChange={handleChange}
-                disabled={submitting}
-              ></textarea>
-            </div>
-
-            {submitted && (
-              <div className="contact-success-message">
-                ✓ Your message has been sent successfully.
-              </div>
-            )}
-
-            {errorMessage && (
-              <div className="contact-success-message">
-                {errorMessage}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              className="contact-submit-btn"
-              disabled={submitting}
-            >
-              {submitting ? "Sending..." : "Send Message →"}
-            </button>
-          </form>
-        </div>
-      </section>
+      
 
       {/* MAP */}
       <section
@@ -447,7 +252,9 @@ function Contact() {
         id="map"
       >
         <div className="contact-location-content">
-          <p className="section-label">FIND US</p>
+          <p className="section-label">
+            FIND US
+          </p>
 
           <h2>
             Come and
@@ -456,8 +263,8 @@ function Contact() {
           </h2>
 
           <p>
-            Visit Riya Sweets and enjoy delicious sweets, fresh
-            cakes, namkeen and more.
+            Visit Riya Sweets and enjoy delicious sweets,
+            fresh cakes, namkeen and more.
           </p>
 
           <div className="location-details">

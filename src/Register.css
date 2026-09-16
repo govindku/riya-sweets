@@ -11,19 +11,14 @@
 
 .register-background {
   position: relative;
-
   min-height: 100vh;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   padding: 110px 20px 60px;
-
   overflow: hidden;
 
-  background-image:
-    url("https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=2000&q=90");
+  background-image: url("https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=2000&q=90");
 
   background-size: cover;
   background-position: center;
@@ -53,7 +48,6 @@
 .register-container {
   position: relative;
   z-index: 2;
-
   width: 100%;
   max-width: 480px;
 }
@@ -62,7 +56,6 @@
 
 .register-card {
   position: relative;
-
   padding: 46px;
 
   border: 1px solid rgba(215, 163, 93, 0.18);
@@ -88,7 +81,6 @@
   content: "";
 
   position: absolute;
-
   top: 0;
   left: 50%;
 
@@ -107,7 +99,6 @@
 
 .register-brand {
   text-align: center;
-
   margin-bottom: 30px;
 }
 
@@ -118,7 +109,6 @@
 
   font-size: 25px;
   font-weight: 700;
-
   letter-spacing: 4px;
 }
 
@@ -128,7 +118,6 @@
   color: rgba(255, 255, 255, 0.3);
 
   font-size: 8px;
-
   letter-spacing: 2.5px;
 }
 
@@ -136,7 +125,6 @@
 
 .register-heading {
   text-align: center;
-
   margin-bottom: 30px;
 }
 
@@ -145,7 +133,6 @@
 
   font-size: 8px;
   font-weight: 700;
-
   letter-spacing: 2px;
 }
 
@@ -155,10 +142,8 @@
   color: #fff;
 
   font-family: "Playfair Display", serif;
-
   font-size: 45px;
   font-weight: 500;
-
   line-height: 1.05;
 }
 
@@ -168,13 +153,11 @@
 
 .register-heading p {
   max-width: 320px;
-
   margin: 0 auto;
 
   color: rgba(255, 255, 255, 0.43);
 
   font-size: 11px;
-
   line-height: 1.7;
 }
 
@@ -182,17 +165,13 @@
 
 .register-form {
   display: flex;
-
   flex-direction: column;
-
   gap: 17px;
 }
 
 .register-field {
   display: flex;
-
   flex-direction: column;
-
   gap: 7px;
 }
 
@@ -201,15 +180,12 @@
 
   font-size: 9px;
   font-weight: 600;
-
   letter-spacing: 1.5px;
-
   text-transform: uppercase;
 }
 
 .register-field input {
   box-sizing: border-box;
-
   width: 100%;
 
   padding: 14px 15px;
@@ -217,7 +193,6 @@
   outline: none;
 
   border: 1px solid rgba(255, 255, 255, 0.11);
-
   border-radius: 0;
 
   background: rgba(17, 17, 17, 0.95);
@@ -225,7 +200,6 @@
   color: #fff;
 
   font-family: inherit;
-
   font-size: 12px;
 
   transition:
@@ -240,7 +214,6 @@
 
 .register-field input:focus {
   border-color: #d7a35d;
-
   background: #151515;
 
   box-shadow:
@@ -264,9 +237,7 @@
   color: #ff8585;
 
   font-size: 10px;
-
   line-height: 1.5;
-
   text-align: center;
 }
 
@@ -282,9 +253,7 @@
   color: #8be09f;
 
   font-size: 10px;
-
   line-height: 1.5;
-
   text-align: center;
 }
 
@@ -294,7 +263,6 @@
   width: 100%;
 
   margin-top: 5px;
-
   padding: 16px;
 
   border: 1px solid #d7a35d;
@@ -306,11 +274,9 @@
   font-family: inherit;
 
   font-size: 10px;
-
   font-weight: 700;
 
   letter-spacing: 1.7px;
-
   text-transform: uppercase;
 
   cursor: pointer;
@@ -324,7 +290,6 @@
 
 .register-submit:hover {
   background: transparent;
-
   color: #d7a35d;
 
   transform: translateY(-2px);
@@ -337,11 +302,16 @@
   transform: translateY(0);
 }
 
+.register-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
 /* ================= LOGIN ================= */
 
 .register-login {
   display: flex;
-
   align-items: center;
   justify-content: center;
 
@@ -381,7 +351,6 @@
 
 .register-login button:hover {
   color: #fff;
-
   letter-spacing: 0.4px;
 }
 
@@ -389,15 +358,12 @@
 
 .register-footer {
   display: flex;
-
   flex-direction: column;
-
   align-items: center;
 
   gap: 6px;
 
   margin-top: 28px;
-
   padding-top: 22px;
 
   border-top: 1px solid rgba(255, 255, 255, 0.08);
@@ -418,7 +384,6 @@
   color: rgba(255, 255, 255, 0.23);
 
   font-size: 8px;
-
   letter-spacing: 1.5px;
 }
 
@@ -441,7 +406,6 @@
 
   .register-brand span {
     font-size: 21px;
-
     letter-spacing: 3px;
   }
 
@@ -479,5 +443,15 @@
 
   .register-heading h1 {
     font-size: 35px;
+  }
+}
+
+/* ================= REDUCED MOTION ================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .register-submit,
+  .register-login button,
+  .register-field input {
+    transition: none;
   }
 }

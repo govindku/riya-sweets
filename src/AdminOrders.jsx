@@ -1,17 +1,32 @@
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+
 import { useNavigate } from "react-router-dom";
+
 import { supabase } from "./lib/supabase";
+
 import "./AdminOrders.css";
 
 function AdminOrders() {
   const navigate = useNavigate();
 
   const [orders, setOrders] = useState([]);
-  const [deliveryInputs, setDeliveryInputs] = useState({});
-  const [loading, setLoading] = useState(true);
+  const [deliveryInputs, setDeliveryInputs] =
+    useState({});
+
+  // Only initial loading screen
+  const [loading, setLoading] =
+    useState(true);
+
+  // Prevent duplicate requests
+  const loadingRef = useRef(false);
+  const mountedRef = useRef(true);
 
   // =====================================================
-  // MAP SUPABASE ORDER TO EXISTING ADMIN FORMAT
+  // MAP SUPABASE ORDER
   // =====================================================
 
   const mapSupabaseOrder = (order) => {
@@ -23,66 +38,105 @@ function AdminOrders() {
       userId: order.user_id,
 
       customer: {
-        name: order.customer_name || "",
-        phone: order.customer_phone || "",
-        email: order.customer_email || "",
-        address: order.address || "",
-        city: order.city || "",
-        pincode: order.pincode || "",
+        name:
+          order.customer_name || "",
+
+        phone:
+          order.customer_phone || "",
+
+        email:
+          order.customer_email || "",
+
+        address:
+          order.address || "",
+
+        city:
+          order.city || "",
+
+        pincode:
+          order.pincode || "",
       },
 
       items: Array.isArray(order.items)
         ? order.items
         : [],
 
-      subtotal: Number(order.subtotal || 0),
+      subtotal: Number(
+        order.subtotal || 0
+      ),
 
       deliveryCharge:
         order.delivery_charge !== null &&
         order.delivery_charge !== undefined
-          ? Number(order.delivery_charge)
+          ? Number(
+              order.delivery_charge
+            )
           : null,
 
       total:
         order.total_amount !== null &&
         order.total_amount !== undefined
-          ? Number(order.total_amount)
+          ? Number(
+              order.total_amount
+            )
           : 0,
 
       paymentMethod:
-        order.payment_method || "Online Payment",
+        order.payment_method ||
+        "Online Payment",
 
       paymentStatus:
-        order.payment_status || "Pending",
+        order.payment_status ||
+        "Pending",
 
       paymentId:
-        order.razorpay_payment_id || "",
+        order.razorpay_payment_id ||
+        "",
 
       razorpayOrderId:
-        order.razorpay_order_id || "",
+        order.razorpay_order_id ||
+        "",
 
       status:
-        order.order_status || "Order Placed",
+        order.order_status ||
+        "Order Placed",
 
       createdAt:
-        order.created_at || new Date().toISOString(),
+        order.created_at ||
+        new Date().toISOString(),
     };
   };
 
   // =====================================================
-  // LOAD ORDERS FROM SUPABASE
+  // LOAD ORDERS
   // =====================================================
 
-  const loadOrders = async () => {
-    try {
-      setLoading(true);
+  const loadOrders = async (
+    showLoading = false
+  ) => {
+    // Prevent duplicate/overlapping requests
+    if (loadingRef.current) {
+      return;
+    }
 
-      const { data, error } = await supabase
-        .from("orders")
-        .select("*")
-        .order("created_at", {
-          ascending: false,
-        });
+    loadingRef.current = true;
+
+    // Only show loading on first page load
+    if (
+      showLoading &&
+      mountedRef.current
+    ) {
+      setLoading(true);
+    }
+
+    try {
+      const { data, error } =
+        await supabase
+          .from("orders")
+          .select("*")
+          .order("created_at", {
+            ascending: false,
+          });
 
       if (error) {
         console.error(
@@ -90,33 +144,49 @@ function AdminOrders() {
           error
         );
 
-        alert(
-          "Orders load nahi ho rahe hain. Please try again."
-        );
+        // Existing orders ko clear mat karo
+        // background refresh fail hone par
+        if (
+          showLoading &&
+          mountedRef.current
+        ) {
+          alert(
+            "Orders load nahi ho rahe hain. Please try again."
+          );
+        }
 
         return;
       }
 
-      const mappedOrders = (data || []).map(
-        mapSupabaseOrder
-      );
+      const mappedOrders =
+        (data || []).map(
+          mapSupabaseOrder
+        );
+
+      if (!mountedRef.current) {
+        return;
+      }
 
       setOrders(mappedOrders);
 
       // Delivery inputs
       const charges = {};
 
-      mappedOrders.forEach((order) => {
-        charges[order.orderId] =
-          order.deliveryCharge !== null &&
-          order.deliveryCharge !== undefined
-            ? order.deliveryCharge
-            : "";
-      });
+      mappedOrders.forEach(
+        (order) => {
+          charges[order.orderId] =
+            order.deliveryCharge !==
+              null &&
+            order.deliveryCharge !==
+              undefined
+              ? order.deliveryCharge
+              : "";
+        }
+      );
 
       setDeliveryInputs(charges);
 
-      // Keep localStorage as compatibility
+      // Compatibility cache
       localStorage.setItem(
         "riyaOrders",
         JSON.stringify(mappedOrders)
@@ -127,19 +197,33 @@ function AdminOrders() {
         error
       );
     } finally {
-      setLoading(false);
+      loadingRef.current = false;
+
+      if (
+        showLoading &&
+        mountedRef.current
+      ) {
+        setLoading(false);
+      }
     }
   };
 
   // =====================================================
-  // INITIAL LOAD + LIVE REFRESH
+  // INITIAL LOAD + SILENT BACKGROUND REFRESH
   // =====================================================
 
   useEffect(() => {
-    loadOrders();
+    mountedRef.current = true;
 
+    // First load
+    loadOrders(true);
+
+    // Other components can tell Admin Orders
+    // that an order changed.
     const handleOrderUpdate = () => {
-      loadOrders();
+      // IMPORTANT:
+      // No loading screen during background refresh.
+      loadOrders(false);
     };
 
     window.addEventListener(
@@ -152,12 +236,14 @@ function AdminOrders() {
       handleOrderUpdate
     );
 
-    // Refresh every 5 seconds
+    // Background refresh every 10 seconds
     const interval = setInterval(() => {
-      loadOrders();
-    }, 5000);
+      loadOrders(false);
+    }, 10000);
 
     return () => {
+      mountedRef.current = false;
+
       window.removeEventListener(
         "riyaOrderUpdated",
         handleOrderUpdate
@@ -180,7 +266,10 @@ function AdminOrders() {
     orderId,
     value
   ) => {
-    if (value === "" || /^\d+$/.test(value)) {
+    if (
+      value === "" ||
+      /^\d+$/.test(value)
+    ) {
       setDeliveryInputs((prev) => ({
         ...prev,
         [orderId]: value,
@@ -205,6 +294,7 @@ function AdminOrders() {
       alert(
         "Please enter a delivery charge."
       );
+
       return;
     }
 
@@ -215,13 +305,15 @@ function AdminOrders() {
       alert(
         "Delivery charge cannot be negative."
       );
+
       return;
     }
 
-    const currentOrder = orders.find(
-      (order) =>
-        order.orderId === orderId
-    );
+    const currentOrder =
+      orders.find(
+        (order) =>
+          order.orderId === orderId
+      );
 
     if (!currentOrder) {
       alert("Order not found.");
@@ -236,8 +328,8 @@ function AdminOrders() {
       subtotal + deliveryCharge;
 
     // Optimistic UI
-    const updatedOrders = orders.map(
-      (order) =>
+    setOrders((prev) =>
+      prev.map((order) =>
         order.orderId === orderId
           ? {
               ...order,
@@ -245,20 +337,22 @@ function AdminOrders() {
               total,
             }
           : order
+      )
     );
 
-    setOrders(updatedOrders);
-
     try {
-      const { data, error } = await supabase
-        .from("orders")
-        .update({
-          delivery_charge: deliveryCharge,
-          total_amount: total,
-        })
-        .eq("order_id", orderId)
-        .select()
-        .single();
+      const { data, error } =
+        await supabase
+          .from("orders")
+          .update({
+            delivery_charge:
+              deliveryCharge,
+
+            total_amount: total,
+          })
+          .eq("order_id", orderId)
+          .select()
+          .single();
 
       if (error) {
         console.error(
@@ -266,7 +360,7 @@ function AdminOrders() {
           error
         );
 
-        await loadOrders();
+        await loadOrders(false);
 
         alert(
           "Delivery charge update nahi hua."
@@ -278,19 +372,21 @@ function AdminOrders() {
       const mappedOrder =
         mapSupabaseOrder(data);
 
-      const finalOrders =
-        orders.map((order) =>
+      setOrders((prev) =>
+        prev.map((order) =>
           order.orderId === orderId
             ? mappedOrder
             : order
-        );
-
-      setOrders(finalOrders);
-
-      localStorage.setItem(
-        "riyaOrders",
-        JSON.stringify(finalOrders)
+        )
       );
+
+      // Update input
+      setDeliveryInputs((prev) => ({
+        ...prev,
+        [orderId]:
+          mappedOrder.deliveryCharge ??
+          "",
+      }));
 
       window.dispatchEvent(
         new Event("riyaOrderUpdated")
@@ -305,7 +401,7 @@ function AdminOrders() {
         error
       );
 
-      await loadOrders();
+      await loadOrders(false);
 
       alert(
         "Something went wrong while updating delivery charge."
@@ -322,27 +418,27 @@ function AdminOrders() {
     newStatus
   ) => {
     // Optimistic UI
-    const updatedOrders = orders.map(
-      (order) =>
+    setOrders((prev) =>
+      prev.map((order) =>
         order.orderId === orderId
           ? {
               ...order,
               status: newStatus,
             }
           : order
+      )
     );
 
-    setOrders(updatedOrders);
-
     try {
-      const { data, error } = await supabase
-        .from("orders")
-        .update({
-          order_status: newStatus,
-        })
-        .eq("order_id", orderId)
-        .select()
-        .single();
+      const { data, error } =
+        await supabase
+          .from("orders")
+          .update({
+            order_status: newStatus,
+          })
+          .eq("order_id", orderId)
+          .select()
+          .single();
 
       if (error) {
         console.error(
@@ -350,7 +446,7 @@ function AdminOrders() {
           error
         );
 
-        await loadOrders();
+        await loadOrders(false);
 
         alert(
           "Order status update nahi hua."
@@ -362,21 +458,15 @@ function AdminOrders() {
       const mappedOrder =
         mapSupabaseOrder(data);
 
-      const finalOrders =
-        updatedOrders.map((order) =>
+      setOrders((prev) =>
+        prev.map((order) =>
           order.orderId === orderId
             ? mappedOrder
             : order
-        );
-
-      setOrders(finalOrders);
-
-      localStorage.setItem(
-        "riyaOrders",
-        JSON.stringify(finalOrders)
+        )
       );
 
-      // Customer My Account refresh
+      // Customer My Account ko notify
       window.dispatchEvent(
         new Event("riyaOrderUpdated")
       );
@@ -386,7 +476,7 @@ function AdminOrders() {
         error
       );
 
-      await loadOrders();
+      await loadOrders(false);
 
       alert(
         "Something went wrong while updating status."
@@ -409,10 +499,11 @@ function AdminOrders() {
     if (!confirmDelete) return;
 
     try {
-      const { error } = await supabase
-        .from("orders")
-        .delete()
-        .eq("order_id", orderId);
+      const { error } =
+        await supabase
+          .from("orders")
+          .delete()
+          .eq("order_id", orderId);
 
       if (error) {
         console.error(
@@ -435,6 +526,16 @@ function AdminOrders() {
 
       setOrders(updatedOrders);
 
+      setDeliveryInputs((prev) => {
+        const updated = {
+          ...prev,
+        };
+
+        delete updated[orderId];
+
+        return updated;
+      });
+
       localStorage.setItem(
         "riyaOrders",
         JSON.stringify(updatedOrders)
@@ -444,7 +545,9 @@ function AdminOrders() {
         new Event("riyaOrderUpdated")
       );
 
-      alert("Order deleted successfully.");
+      alert(
+        "Order deleted successfully."
+      );
     } catch (error) {
       console.error(
         "Delete order error:",
@@ -461,12 +564,13 @@ function AdminOrders() {
   // CALCULATE REVENUE
   // =====================================================
 
-  const totalRevenue = orders.reduce(
-    (total, order) =>
-      total +
-      Number(order.total || 0),
-    0
-  );
+  const totalRevenue =
+    orders.reduce(
+      (total, order) =>
+        total +
+        Number(order.total || 0),
+      0
+    );
 
   // =====================================================
   // UI
@@ -474,15 +578,20 @@ function AdminOrders() {
 
   return (
     <div className="orders-admin-page">
+
       {/* SIDEBAR */}
 
       <aside className="orders-sidebar">
+
         <div className="orders-logo">
           <span>RIYA</span>
-          <small>RESTAURANT ADMIN</small>
+          <small>
+            RESTAURANT ADMIN
+          </small>
         </div>
 
         <nav className="orders-nav">
+
           <button
             onClick={() =>
               navigate("/admin")
@@ -526,26 +635,41 @@ function AdminOrders() {
           >
             ⚙️ Settings
           </button>
+
         </nav>
 
         <div className="orders-sidebar-bottom">
-          <span>RIYA SWEETS</span>
-          <small>Admin Panel</small>
+          <span>
+            RIYA SWEETS
+          </span>
+
+          <small>
+            Admin Panel
+          </small>
         </div>
+
       </aside>
 
       {/* MAIN */}
 
       <main className="orders-main">
+
         {/* TOP BAR */}
 
         <div className="orders-topbar">
+
           <div>
-            <p>ORDER MANAGEMENT</p>
-            <h1>All Orders</h1>
+            <p>
+              ORDER MANAGEMENT
+            </p>
+
+            <h1>
+              All Orders
+            </h1>
           </div>
 
           <div className="top-actions">
+
             <button
               className="back-btn"
               onClick={() =>
@@ -557,21 +681,28 @@ function AdminOrders() {
 
             <button
               className="refresh-orders-btn"
-              onClick={loadOrders}
+              onClick={() =>
+                loadOrders(false)
+              }
               disabled={loading}
             >
               {loading
                 ? "Loading..."
                 : "↻ Refresh"}
             </button>
+
           </div>
+
         </div>
 
         {/* STATS */}
 
         <div className="orders-stats">
+
           <div className="orders-stat-card">
-            <span>🛒 Total Orders</span>
+            <span>
+              🛒 Total Orders
+            </span>
 
             <strong>
               {orders.length}
@@ -579,7 +710,9 @@ function AdminOrders() {
           </div>
 
           <div className="orders-stat-card">
-            <span>⏳ Pending</span>
+            <span>
+              ⏳ Pending
+            </span>
 
             <strong>
               {
@@ -597,7 +730,9 @@ function AdminOrders() {
           </div>
 
           <div className="orders-stat-card">
-            <span>✅ Delivered</span>
+            <span>
+              ✅ Delivered
+            </span>
 
             <strong>
               {
@@ -611,410 +746,472 @@ function AdminOrders() {
           </div>
 
           <div className="orders-stat-card">
-            <span>💰 Revenue</span>
+            <span>
+              💰 Revenue
+            </span>
 
             <strong>
               ₹{totalRevenue}
             </strong>
           </div>
+
         </div>
 
         {/* ORDERS */}
 
         <section className="orders-section">
+
           <div className="orders-section-header">
+
             <div>
-              <p>RIYA SWEETS</p>
-              <h2>Customer Orders</h2>
+              <p>
+                RIYA SWEETS
+              </p>
+
+              <h2>
+                Customer Orders
+              </h2>
             </div>
 
             <span className="order-count">
               {orders.length} Orders
             </span>
+
           </div>
 
-          {/* LOADING */}
+          {/* INITIAL LOADING */}
 
-          {loading && orders.length === 0 ? (
+          {loading &&
+          orders.length === 0 ? (
             <div className="no-orders">
+
               <div className="empty-icon">
                 ⏳
               </div>
 
-              <h2>Loading Orders...</h2>
+              <h2>
+                Loading Orders...
+              </h2>
 
               <p>
-                Please wait while orders are
-                being loaded.
+                Please wait while orders
+                are being loaded.
               </p>
+
             </div>
           ) : orders.length === 0 ? (
-            /* EMPTY */
-
             <div className="no-orders">
+
               <div className="empty-icon">
                 🛒
               </div>
 
-              <h2>No Orders Found</h2>
+              <h2>
+                No Orders Found
+              </h2>
 
               <p>
                 Customer orders will appear
                 here after placing an order.
               </p>
+
             </div>
           ) : (
             <div className="orders-list">
-              {[...orders]
-                .reverse()
-                .map((order) => {
-                  const currentDeliveryCharge =
-                    deliveryInputs[
-                      order.orderId
-                    ];
 
-                  const subtotal = Number(
+              {orders.map((order) => {
+
+                const currentDeliveryCharge =
+                  deliveryInputs[
+                    order.orderId
+                  ];
+
+                const subtotal =
+                  Number(
                     order.subtotal || 0
                   );
 
-                  const deliveryCharge =
-                    currentDeliveryCharge === ""
-                      ? 0
-                      : Number(
-                          currentDeliveryCharge ||
-                            0
-                        );
+                const deliveryCharge =
+                  currentDeliveryCharge ===
+                  ""
+                    ? 0
+                    : Number(
+                        currentDeliveryCharge ||
+                          0
+                      );
 
-                  const previewTotal =
-                    subtotal +
-                    deliveryCharge;
+                const previewTotal =
+                  subtotal +
+                  deliveryCharge;
 
-                  const isDeliveryAdded =
-                    order.deliveryCharge !==
-                      null &&
-                    order.deliveryCharge !==
-                      undefined;
+                const isDeliveryAdded =
+                  order.deliveryCharge !==
+                    null &&
+                  order.deliveryCharge !==
+                    undefined;
 
-                  return (
-                    <div
-                      className="admin-order-card"
-                      key={order.orderId}
-                    >
-                      {/* HEADER */}
+                return (
+                  <div
+                    className="admin-order-card"
+                    key={order.orderId}
+                  >
 
-                      <div className="order-card-header">
+                    {/* HEADER */}
+
+                    <div className="order-card-header">
+
+                      <div>
+
+                        <span>
+                          ORDER ID
+                        </span>
+
+                        <h3>
+                          {order.orderId}
+                        </h3>
+
+                        <small>
+                          {order.createdAt
+                            ? new Date(
+                                order.createdAt
+                              ).toLocaleString()
+                            : ""}
+                        </small>
+
+                      </div>
+
+                      <button
+                        className="delete-order-btn"
+                        onClick={() =>
+                          deleteOrder(
+                            order.orderId
+                          )
+                        }
+                      >
+                        🗑 Delete
+                      </button>
+
+                    </div>
+
+                    {/* CUSTOMER */}
+
+                    <div className="customer-section">
+
+                      <h4>
+                        Customer Details
+                      </h4>
+
+                      <div className="customer-grid">
+
                         <div>
                           <span>
-                            ORDER ID
-                          </span>
-
-                          <h3>
-                            {order.orderId}
-                          </h3>
-
-                          <small>
-                            {order.createdAt
-                              ? new Date(
-                                  order.createdAt
-                                ).toLocaleString()
-                              : ""}
-                          </small>
-                        </div>
-
-                        <button
-                          className="delete-order-btn"
-                          onClick={() =>
-                            deleteOrder(
-                              order.orderId
-                            )
-                          }
-                        >
-                          🗑 Delete
-                        </button>
-                      </div>
-
-                      {/* CUSTOMER */}
-
-                      <div className="customer-section">
-                        <h4>
-                          Customer Details
-                        </h4>
-
-                        <div className="customer-grid">
-                          <div>
-                            <span>
-                              Name
-                            </span>
-
-                            <strong>
-                              {order.customer
-                                ?.name ||
-                                "N/A"}
-                            </strong>
-                          </div>
-
-                          <div>
-                            <span>
-                              Phone
-                            </span>
-
-                            <strong>
-                              {order.customer
-                                ?.phone ||
-                                "N/A"}
-                            </strong>
-                          </div>
-
-                          <div>
-                            <span>
-                              Email
-                            </span>
-
-                            <strong>
-                              {order.customer
-                                ?.email ||
-                                "N/A"}
-                            </strong>
-                          </div>
-
-                          <div>
-                            <span>
-                              City
-                            </span>
-
-                            <strong>
-                              {order.customer
-                                ?.city ||
-                                "N/A"}
-                            </strong>
-                          </div>
-
-                          <div className="address-box">
-                            <span>
-                              Address
-                            </span>
-
-                            <strong>
-                              {order.customer
-                                ?.address ||
-                                "N/A"}
-                            </strong>
-                          </div>
-
-                          <div>
-                            <span>
-                              Pincode
-                            </span>
-
-                            <strong>
-                              {order.customer
-                                ?.pincode ||
-                                "N/A"}
-                            </strong>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* ITEMS */}
-
-                      <div className="order-items-section">
-                        <h4>
-                          Ordered Items
-                        </h4>
-
-                        <div className="items-list">
-                          {order.items?.map(
-                            (
-                              item,
-                              index
-                            ) => (
-                              <div
-                                className="order-item"
-                                key={
-                                  item.id ||
-                                  index
-                                }
-                              >
-                                <div>
-                                  <strong>
-                                    {item.name}
-                                  </strong>
-
-                                  <span>
-                                    ₹
-                                    {
-                                      item.price
-                                    }{" "}
-                                    ×{" "}
-                                    {
-                                      item.quantity
-                                    }
-                                  </span>
-                                </div>
-
-                                <strong>
-                                  ₹
-                                  {Number(
-                                    item.price ||
-                                      0
-                                  ) *
-                                    Number(
-                                      item.quantity ||
-                                        0
-                                    )}
-                                </strong>
-                              </div>
-                            )
-                          )}
-                        </div>
-                      </div>
-
-                      {/* PRICE / DELIVERY */}
-
-                      <div className="order-card-bottom">
-                        <div className="payment-info">
-                          <span>
-                            PAYMENT
+                            Name
                           </span>
 
                           <strong>
-                            {order.paymentMethod ||
-                              "Online Payment"}
+                            {order.customer
+                              ?.name ||
+                              "N/A"}
                           </strong>
-
-                          <small>
-                            {order.paymentStatus ||
-                              "Pending"}
-                          </small>
                         </div>
 
-                        <div className="order-total">
+                        <div>
                           <span>
-                            SUBTOTAL
+                            Phone
                           </span>
 
                           <strong>
-                            ₹{subtotal}
+                            {order.customer
+                              ?.phone ||
+                              "N/A"}
                           </strong>
                         </div>
 
-                        {/* DELIVERY */}
-
-                        <div className="delivery-charge-admin">
+                        <div>
                           <span>
-                            DELIVERY CHARGE
+                            Email
                           </span>
 
-                          <div className="delivery-charge-control">
-                            <span>₹</span>
+                          <strong>
+                            {order.customer
+                              ?.email ||
+                              "N/A"}
+                          </strong>
+                        </div>
 
-                            <input
-                              type="number"
-                              min="0"
-                              step="1"
-                              value={
-                                currentDeliveryCharge ??
-                                ""
-                              }
-                              onChange={(e) =>
-                                handleDeliveryChange(
-                                  order.orderId,
-                                  e.target
-                                    .value
-                                )
-                              }
-                              placeholder="Enter charge"
-                            />
+                        <div>
+                          <span>
+                            City
+                          </span>
 
-                            <button
-                              type="button"
-                              onClick={() =>
-                                saveDeliveryCharge(
-                                  order.orderId
-                                )
+                          <strong>
+                            {order.customer
+                              ?.city ||
+                              "N/A"}
+                          </strong>
+                        </div>
+
+                        <div className="address-box">
+                          <span>
+                            Address
+                          </span>
+
+                          <strong>
+                            {order.customer
+                              ?.address ||
+                              "N/A"}
+                          </strong>
+                        </div>
+
+                        <div>
+                          <span>
+                            Pincode
+                          </span>
+
+                          <strong>
+                            {order.customer
+                              ?.pincode ||
+                              "N/A"}
+                          </strong>
+                        </div>
+
+                      </div>
+
+                    </div>
+
+                    {/* ITEMS */}
+
+                    <div className="order-items-section">
+
+                      <h4>
+                        Ordered Items
+                      </h4>
+
+                      <div className="items-list">
+
+                        {order.items?.map(
+                          (
+                            item,
+                            index
+                          ) => (
+                            <div
+                              className="order-item"
+                              key={
+                                item.id ||
+                                index
                               }
                             >
-                              Save
-                            </button>
-                          </div>
 
-                          {!isDeliveryAdded && (
-                            <small>
-                              Delivery charge
-                              pending
-                            </small>
-                          )}
-                        </div>
+                              <div>
 
-                        {/* FINAL TOTAL */}
+                                <strong>
+                                  {item.name}
+                                </strong>
 
-                        <div className="order-total final">
-                          <span>
-                            FINAL TOTAL
-                          </span>
+                                <span>
+                                  ₹
+                                  {
+                                    item.price
+                                  }{" "}
+                                  ×{" "}
+                                  {
+                                    item.quantity
+                                  }
+                                </span>
 
-                          <strong>
-                            ₹
-                            {isDeliveryAdded
-                              ? Number(
-                                  order.total ||
+                              </div>
+
+                              <strong>
+                                ₹
+                                {Number(
+                                  item.price ||
                                     0
-                                )
-                              : previewTotal}
-                          </strong>
-                        </div>
+                                ) *
+                                  Number(
+                                    item.quantity ||
+                                      0
+                                  )}
+                              </strong>
 
-                        {/* STATUS */}
+                            </div>
+                          )
+                        )}
 
-                        <div className="status-section">
+                      </div>
+
+                    </div>
+
+                    {/* PRICE / DELIVERY */}
+
+                    <div className="order-card-bottom">
+
+                      {/* PAYMENT */}
+
+                      <div className="payment-info">
+
+                        <span>
+                          PAYMENT
+                        </span>
+
+                        <strong>
+                          {order.paymentMethod ||
+                            "Online Payment"}
+                        </strong>
+
+                        <small>
+                          {order.paymentStatus ||
+                            "Pending"}
+                        </small>
+
+                      </div>
+
+                      {/* SUBTOTAL */}
+
+                      <div className="order-total">
+
+                        <span>
+                          SUBTOTAL
+                        </span>
+
+                        <strong>
+                          ₹{subtotal}
+                        </strong>
+
+                      </div>
+
+                      {/* DELIVERY */}
+
+                      <div className="delivery-charge-admin">
+
+                        <span>
+                          DELIVERY CHARGE
+                        </span>
+
+                        <div className="delivery-charge-control">
+
                           <span>
-                            ORDER STATUS
+                            ₹
                           </span>
 
-                          <select
+                          <input
+                            type="number"
+                            min="0"
+                            step="1"
                             value={
-                              order.status ||
-                              "Order Placed"
+                              currentDeliveryCharge ??
+                              ""
                             }
                             onChange={(e) =>
-                              updateStatus(
+                              handleDeliveryChange(
                                 order.orderId,
                                 e.target.value
                               )
                             }
+                            placeholder="Enter charge"
+                          />
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              saveDeliveryCharge(
+                                order.orderId
+                              )
+                            }
                           >
-                            <option value="Order Placed">
-                              Order Placed
-                            </option>
+                            Save
+                          </button>
 
-                            <option value="Confirmed">
-                              Confirmed
-                            </option>
-
-                            <option value="Preparing">
-                              Preparing
-                            </option>
-
-                            <option value="Ready">
-                              Ready
-                            </option>
-
-                            <option value="Delivered">
-                              Delivered
-                            </option>
-
-                            <option value="Cancelled">
-                              Cancelled
-                            </option>
-                          </select>
                         </div>
+
+                        {!isDeliveryAdded && (
+                          <small>
+                            Delivery charge
+                            pending
+                          </small>
+                        )}
+
                       </div>
+
+                      {/* FINAL TOTAL */}
+
+                      <div className="order-total final">
+
+                        <span>
+                          FINAL TOTAL
+                        </span>
+
+                        <strong>
+                          ₹
+                          {isDeliveryAdded
+                            ? Number(
+                                order.total ||
+                                  0
+                              )
+                            : previewTotal}
+                        </strong>
+
+                      </div>
+
+                      {/* STATUS */}
+
+                      <div className="status-section">
+
+                        <span>
+                          ORDER STATUS
+                        </span>
+
+                        <select
+                          value={
+                            order.status ||
+                            "Order Placed"
+                          }
+                          onChange={(e) =>
+                            updateStatus(
+                              order.orderId,
+                              e.target.value
+                            )
+                          }
+                        >
+
+                          <option value="Order Placed">
+                            Order Placed
+                          </option>
+
+                          <option value="Confirmed">
+                            Confirmed
+                          </option>
+
+                          <option value="Preparing">
+                            Preparing
+                          </option>
+
+                          <option value="Ready">
+                            Ready
+                          </option>
+
+                          <option value="Delivered">
+                            Delivered
+                          </option>
+
+                          <option value="Cancelled">
+                            Cancelled
+                          </option>
+
+                        </select>
+
+                      </div>
+
                     </div>
-                  );
-                })}
+
+                  </div>
+                );
+              })}
+
             </div>
           )}
+
         </section>
+
       </main>
     </div>
   );

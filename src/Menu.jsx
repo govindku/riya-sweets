@@ -9,6 +9,7 @@ gsap.registerPlugin(ScrollTrigger);
 function Menu() {
   const [activeCategory, setActiveCategory] = useState("All");
   const [dishes, setDishes] = useState([]);
+
   const [orderItems, setOrderItems] = useState(() => {
     const savedItems = localStorage.getItem("riyaOrder");
     return savedItems ? JSON.parse(savedItems) : [];
@@ -20,6 +21,7 @@ function Menu() {
   // =========================
   // LOAD MENU FROM SUPABASE
   // =========================
+
   useEffect(() => {
     const loadMenu = async () => {
       try {
@@ -96,7 +98,6 @@ function Menu() {
 
   const saveOrder = (items) => {
     setOrderItems(items);
-
     localStorage.setItem("riyaOrder", JSON.stringify(items));
   };
 
@@ -168,6 +169,28 @@ function Menu() {
     (total, item) => total + Number(item.price || 0) * item.quantity,
     0,
   );
+
+  // =========================
+  // PROCEED TO ORDER
+  // =========================
+
+  const handleProceedToOrder = () => {
+    const loggedInUser = JSON.parse(
+      localStorage.getItem("riyaLoggedInUser") || "null",
+    );
+
+    // User is NOT logged in
+    if (!loggedInUser) {
+      setIsCartOpen(false);
+
+      window.location.href = "/login?redirect=order";
+      return;
+    }
+
+    // User is already logged in
+    setIsCartOpen(false);
+    window.location.href = "/order";
+  };
 
   // =========================
   // GSAP MENU ANIMATION
@@ -290,12 +313,16 @@ function Menu() {
           type="button"
           className="menu-cart-button"
           onClick={() => setIsCartOpen(true)}
-          aria-label={`Open shopping cart${totalItems > 0 ? `, ${totalItems} items` : ""}`}
+          aria-label={`Open shopping cart${
+            totalItems > 0 ? `, ${totalItems} items` : ""
+          }`}
         >
           <span className="cart-icon">🛒</span>
           <span>Cart</span>
 
-          {totalItems > 0 && <span className="cart-count">{totalItems}</span>}
+          {totalItems > 0 && (
+            <span className="cart-count">{totalItems}</span>
+          )}
         </button>
       </header>
 
@@ -319,7 +346,9 @@ function Menu() {
           </p>
         </div>
 
-        <div className="menu-hero-scroll">SCROLL TO EXPLORE ↓</div>
+        <div className="menu-hero-scroll">
+          SCROLL TO EXPLORE ↓
+        </div>
       </section>
 
       {/* =========================
@@ -378,7 +407,6 @@ function Menu() {
               }}
             >
               <h3>Loading Menu...</h3>
-
               <p>Please wait while we load our latest menu.</p>
             </div>
           ) : filteredDishes.length === 0 ? (
@@ -392,8 +420,8 @@ function Menu() {
               <h3>No dishes available</h3>
 
               <p>
-                No dishes found in the <strong>{activeCategory}</strong>{" "}
-                category.
+                No dishes found in the{" "}
+                <strong>{activeCategory}</strong> category.
               </p>
 
               <p>Please check back soon for our latest menu.</p>
@@ -453,7 +481,10 @@ function Menu() {
           CART OVERLAY
       ========================= */}
 
-      <div className="cart-overlay" onClick={() => setIsCartOpen(false)}></div>
+      <div
+        className="cart-overlay"
+        onClick={() => setIsCartOpen(false)}
+      ></div>
 
       {/* =========================
           CART SIDEBAR
@@ -470,6 +501,7 @@ function Menu() {
           </div>
 
           <button
+            type="button"
             className="cart-close"
             onClick={() => setIsCartOpen(false)}
             aria-label="Close cart"
@@ -488,6 +520,7 @@ function Menu() {
               <p>Add some delicious dishes from our menu.</p>
 
               <button
+                type="button"
                 onClick={() => setIsCartOpen(false)}
                 className="empty-cart-btn"
               >
@@ -505,11 +538,21 @@ function Menu() {
                   <p>₹{Number(item.price || 0)}</p>
 
                   <div className="quantity-control">
-                    <button onClick={() => decreaseQuantity(item.id)}>−</button>
+                    <button
+                      type="button"
+                      onClick={() => decreaseQuantity(item.id)}
+                    >
+                      −
+                    </button>
 
                     <span>{item.quantity}</span>
 
-                    <button onClick={() => increaseQuantity(item.id)}>+</button>
+                    <button
+                      type="button"
+                      onClick={() => increaseQuantity(item.id)}
+                    >
+                      +
+                    </button>
                   </div>
                 </div>
 
@@ -530,10 +573,9 @@ function Menu() {
             </div>
 
             <button
+              type="button"
               className="proceed-order-btn"
-              onClick={() => {
-                window.location.href = "/order";
-              }}
+              onClick={handleProceedToOrder}
             >
               Proceed to Order →
             </button>

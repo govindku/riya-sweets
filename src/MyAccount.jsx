@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import "./MyAccount.css";
@@ -11,58 +11,230 @@ function MyAccount() {
   const [reservations, setReservations] = useState([]);
   const [activeTab, setActiveTab] = useState("orders");
   const [loggedInUser, setLoggedInUser] = useState(null);
-  const [loadingReservations, setLoadingReservations] = useState(false);
 
-  // =========================
+  const [loadingOrders, setLoadingOrders] = useState(true);
+  const [loadingReservations, setLoadingReservations] = useState(true);
+
+  // Prevent duplicate requests
+  const ordersLoadingRef = useRef(false);
+  const reservationsLoadingRef = useRef(false);
+  const mountedRef = useRef(true);
+
+  // =====================================================
   // GET LOGGED-IN USER
-  // =========================
+  // =====================================================
+
   const getLoggedInUser = () => {
-    return JSON.parse(
-      localStorage.getItem("riyaLoggedInUser") || "null",
-    );
+    try {
+      return JSON.parse(
+        localStorage.getItem("riyaLoggedInUser") || "null"
+      );
+    } catch (error) {
+      console.error("Logged-in user parse error:", error);
+      return null;
+    }
   };
 
-  // =========================
-  // LOAD ORDERS FROM LOCAL
-  // =========================
-  const loadOrders = (user) => {
-    if (!user) {
+  // =====================================================
+  // MAP SUPABASE ORDER
+  // =====================================================
+
+  const mapSupabaseOrder = (order) => {
+    return {
+      id: order.id,
+      orderId: order.order_id,
+      userId: order.user_id,
+
+      customer: {
+        name: order.customer_name || "",
+        phone: order.customer_phone || "",
+        email: order.customer_email || "",
+        address: order.address || "",
+        city: order.city || "",
+        pincode: order.pincode || "",
+      },
+
+      items: Array.isArray(order.items) ? order.items : [],
+
+      subtotal: Number(order.subtotal || 0),
+
+      deliveryCharge:
+        order.delivery_charge !== null &&
+        order.delivery_charge !== undefined
+          ? Number(order.delivery_charge)
+          : 0,
+
+      total:
+        order.total_amount !== null &&
+        order.total_amount !== undefined
+          ? Number(order.total_amount)
+          : 0,
+
+      paymentMethod:
+        order.payment_method || "Online Payment",
+
+      paymentStatus:
+        order.payment_status || "Pending",
+
+      paymentId:
+        order.razorpay_payment_id || "",
+
+      razorpayOrderId:
+        order.razorpay_order_id || "",
+
+      status:
+        order.order_status || "Order Placed",
+
+      createdAt:
+        order.created_at || new Date().toISOString(),
+    };
+  };
+
+  // =====================================================
+  // LOAD ORDERS
+  // =====================================================
+
+  const loadOrders = async (
+  user = loggedInUser,
+  showLoading = false
+) => {
+  if (!user?.email) {
+    if (mountedRef.current) {
       setOrders([]);
+      setLoadingOrders(false);
+    }
+    return;
+  }
+
+  if (ordersLoadingRef.current) {
+    return;
+  }
+
+  ordersLoadingRef.current = true;
+
+  if (showLoading && mountedRef.current) {
+    setLoadingOrders(true);
+  }
+
+  try {
+    // IMPORTANT:
+    // Order.jsx में email जिस तरह save हुआ है,
+    // उसी exact email से search करेंगे.
+    const userEmail = String(user.email).trim();
+
+    console.log("🔎 My Account exact email:", userEmail);
+
+    // 1️⃣ user_id से exact match
+    const { data: userIdOrders, error: userIdError } =
+      await supabase
+        .from("orders")
+        .select("*")
+        .eq("user_id", userEmail)
+        .order("created_at", {
+          ascending: false,
+        });
+
+    console.log("📌 user_id orders:", userIdOrders);
+    console.log("❌ user_id error:", userIdError);
+
+    // 2️⃣ customer_email से exact match
+    const { data: customerEmailOrders, error: customerEmailError } =
+      await supabase
+        .from("orders")
+        .select("*")
+        .eq("customer_email", userEmail)
+        .order("created_at", {
+          ascending: false,
+        });
+
+    console.log("📌 customer_email orders:", customerEmailOrders);
+    console.log(
+      "❌ customer_email error:",
+      customerEmailError
+    );
+
+    const allOrders = [
+      ...(userIdOrders || []),
+      ...(customerEmailOrders || []),
+    ];
+
+    // Duplicate हटाओ
+    const uniqueOrders = Array.from(
+      new Map(
+        allOrders.map((order) => [
+          order.id,
+          order,
+        ])
+      ).values()
+    );
+
+    uniqueOrders.sort(
+      (a, b) =>
+        new Date(b.created_at) -
+        new Date(a.created_at)
+    );
+
+    console.log(
+      "📦 FINAL My Account orders:",
+      uniqueOrders
+    );
+
+    const formattedOrders = uniqueOrders.map(
+      mapSupabaseOrder
+    );
+
+    if (!mountedRef.current) return;
+
+    setOrders(formattedOrders);
+
+    localStorage.setItem(
+      "riyaOrders",
+      JSON.stringify(formattedOrders)
+    );
+  } catch (error) {
+    console.error(
+      "❌ My Account order loading error:",
+      error
+    );
+  } finally {
+    ordersLoadingRef.current = false;
+
+    if (showLoading && mountedRef.current) {
+      setLoadingOrders(false);
+    }
+  }
+};
+
+  // =====================================================
+  // LOAD RESERVATIONS
+  // =====================================================
+
+  const loadReservations = async (
+    user = loggedInUser,
+    showLoading = false
+  ) => {
+    if (!user?.email) {
+      if (mountedRef.current) {
+        setReservations([]);
+        setLoadingReservations(false);
+      }
       return;
     }
 
-    const savedOrders = JSON.parse(
-      localStorage.getItem("riyaOrders") || "[]",
-    );
-
-    const userEmail = user.email?.toLowerCase();
-
-    const userOrders = savedOrders.filter((order) => {
-      const orderUserId = order.userId?.toLowerCase();
-      const orderEmail = order.customer?.email?.toLowerCase();
-
-      return (
-        (orderUserId && orderUserId === userEmail) ||
-        (orderEmail && orderEmail === userEmail)
-      );
-    });
-
-    setOrders(userOrders);
-  };
-
-  // =========================
-  // LOAD RESERVATIONS FROM SUPABASE
-  // =========================
-  const loadReservations = async (user = loggedInUser) => {
-    if (!user?.email) {
-      setReservations([]);
+    if (reservationsLoadingRef.current) {
       return;
+    }
+
+    reservationsLoadingRef.current = true;
+
+    if (showLoading && mountedRef.current) {
+      setLoadingReservations(true);
     }
 
     try {
-      setLoadingReservations(true);
-
-      const userEmail = user.email.toLowerCase();
+      const userEmail = user.email
+        .trim()
+        .toLowerCase();
 
       const { data, error } = await supabase
         .from("reservations")
@@ -75,10 +247,9 @@ function MyAccount() {
       if (error) {
         console.error(
           "My Account reservation load error:",
-          error,
+          error
         );
 
-        setReservations([]);
         return;
       }
 
@@ -86,72 +257,137 @@ function MyAccount() {
         (reservation) => ({
           id: reservation.id,
 
-          bookingId: reservation.booking_id,
+          bookingId:
+            reservation.booking_id,
 
-          userId: reservation.user_id,
+          userId:
+            reservation.user_id,
 
           customer: {
-            name: reservation.customer_name,
-            phone: reservation.customer_phone,
-            email: reservation.customer_email || "",
+            name:
+              reservation.customer_name || "",
+            phone:
+              reservation.customer_phone || "",
+            email:
+              reservation.customer_email || "",
           },
 
-          date: reservation.reservation_date,
+          date:
+            reservation.reservation_date,
 
-          time: reservation.reservation_time,
+          time:
+            reservation.reservation_time,
 
-          guests: reservation.guests,
+          guests:
+            reservation.guests,
 
-          table: reservation.table_preference,
+          table:
+            reservation.table_preference,
 
-          request: reservation.special_request || "",
+          request:
+            reservation.special_request || "",
 
-          status: reservation.status || "Pending",
+          status:
+            reservation.status || "Pending",
 
-          createdAt: reservation.created_at,
-        }),
+          createdAt:
+            reservation.created_at,
+        })
       );
+
+      if (!mountedRef.current) return;
 
       setReservations(formattedReservations);
     } catch (error) {
       console.error(
         "My Account reservation error:",
-        error,
+        error
       );
-
-      setReservations([]);
     } finally {
-      setLoadingReservations(false);
+      reservationsLoadingRef.current = false;
+
+      if (
+        showLoading &&
+        mountedRef.current
+      ) {
+        setLoadingReservations(false);
+      }
     }
   };
 
-  // =========================
-  // LOAD ALL CUSTOMER DATA
-  // =========================
-  const loadData = async () => {
+  // =====================================================
+  // LOAD ALL DATA
+  // =====================================================
+
+  const loadData = async (showLoading = false) => {
     const user = getLoggedInUser();
 
     if (!user) {
-      setLoggedInUser(null);
-      setOrders([]);
-      setReservations([]);
+      if (mountedRef.current) {
+        setLoggedInUser(null);
+        setOrders([]);
+        setReservations([]);
+        setLoadingOrders(false);
+        setLoadingReservations(false);
+      }
+
       return;
     }
 
-    setLoggedInUser(user);
+    if (mountedRef.current) {
+      setLoggedInUser(user);
+    }
 
-    loadOrders(user);
-    await loadReservations(user);
+    await Promise.all([
+      loadOrders(user, showLoading),
+      loadReservations(user, showLoading),
+    ]);
   };
 
-  // =========================
-  // INITIAL LOAD + LIVE UPDATE
-  // =========================
-  useEffect(() => {
-    loadData();
+  // =====================================================
+  // INITIAL LOAD + SILENT BACKGROUND REFRESH
+  // =====================================================
 
-    // Local order/reservation updates
-    const handleLocalUpdate = () => {
+  useEffect(() => {
+    mountedRef.current = true;
+
+    // First load
+    loadData(true);
+
+    // When another component updates an order
+    const handleOrderUpdate = () => {
+      const user = getLoggedInUser();
+
+      if (!user) {
+        setLoggedInUser(null);
+        setOrders([]);
+        return;
+      }
+
+      setLoggedInUser(user);
+
+      // IMPORTANT:
+      // Background refresh only.
+      // Loading screen nahi dikhega.
+      loadOrders(user, false);
+    };
+
+    // Reservation update
+    const handleReservationUpdate = () => {
+      const user = getLoggedInUser();
+
+      if (!user) {
+        setLoggedInUser(null);
+        setReservations([]);
+        return;
+      }
+
+      setLoggedInUser(user);
+
+      loadReservations(user, false);
+    };
+
+    const handleStorage = () => {
       const user = getLoggedInUser();
 
       if (!user) {
@@ -162,159 +398,207 @@ function MyAccount() {
       }
 
       setLoggedInUser(user);
-      loadOrders(user);
-      loadReservations(user);
+
+      loadOrders(user, false);
+      loadReservations(user, false);
     };
 
     window.addEventListener(
-      "storage",
-      handleLocalUpdate,
-    );
-
-    window.addEventListener(
       "riyaOrderUpdated",
-      handleLocalUpdate,
+      handleOrderUpdate
     );
 
     window.addEventListener(
       "riyaReservationUpdated",
-      handleLocalUpdate,
+      handleReservationUpdate
     );
 
-    // =========================
-    // LIVE RESERVATION REFRESH
-    // =========================
-    // Owner can update reservation status
-    // from Admin panel. This checks Supabase
-    // every 5 seconds.
+    window.addEventListener(
+      "storage",
+      handleStorage
+    );
+
+    // Silent background refresh every 10 seconds
     const liveRefresh = setInterval(() => {
       const user = getLoggedInUser();
 
-      if (user) {
-        loadReservations(user);
-      }
-    }, 5000);
+      if (!user) return;
+
+      loadOrders(user, false);
+      loadReservations(user, false);
+    }, 10000);
 
     return () => {
-      window.removeEventListener(
-        "storage",
-        handleLocalUpdate,
-      );
+      mountedRef.current = false;
 
       window.removeEventListener(
         "riyaOrderUpdated",
-        handleLocalUpdate,
+        handleOrderUpdate
       );
 
       window.removeEventListener(
         "riyaReservationUpdated",
-        handleLocalUpdate,
+        handleReservationUpdate
+      );
+
+      window.removeEventListener(
+        "storage",
+        handleStorage
       );
 
       clearInterval(liveRefresh);
     };
   }, []);
 
-  // =========================
+  // =====================================================
   // CANCEL ORDER
-  // =========================
-  const cancelOrder = (orderId) => {
+  // =====================================================
+
+  const cancelOrder = async (orderId) => {
     const confirmed = window.confirm(
-      "Are you sure you want to cancel this order?",
-    );
-
-    if (!confirmed) return;
-
-    const allOrders = JSON.parse(
-      localStorage.getItem("riyaOrders") || "[]",
-    );
-
-    const userEmail =
-      loggedInUser?.email?.toLowerCase();
-
-    const updatedOrders = allOrders.map((order) => {
-      const orderUserId =
-        order.userId?.toLowerCase();
-
-      const orderEmail =
-        order.customer?.email?.toLowerCase();
-
-      const isCurrentUser =
-        orderUserId === userEmail ||
-        orderEmail === userEmail;
-
-      if (
-        order.orderId === orderId &&
-        isCurrentUser
-      ) {
-        return {
-          ...order,
-          status: "Cancelled",
-        };
-      }
-
-      return order;
-    });
-
-    localStorage.setItem(
-      "riyaOrders",
-      JSON.stringify(updatedOrders),
-    );
-
-    loadOrders(loggedInUser);
-
-    window.dispatchEvent(
-      new Event("riyaOrderUpdated"),
-    );
-  };
-
-  // =========================
-  // CANCEL RESERVATION
-  // =========================
-  const cancelReservation = async (bookingId) => {
-    const confirmed = window.confirm(
-      "Are you sure you want to cancel this table reservation?",
+      "Are you sure you want to cancel this order?"
     );
 
     if (!confirmed) return;
 
     try {
       const userEmail =
-        loggedInUser?.email?.toLowerCase();
+        loggedInUser?.email?.trim();
 
       if (!userEmail) return;
 
-      // Make sure this booking belongs
-      // to the logged-in customer.
-      const { data: booking, error: findError } =
+      const { data: order, error: findError } =
         await supabase
-          .from("reservations")
-          .select("id, booking_id, user_id, status")
-          .eq("booking_id", bookingId)
+          .from("orders")
+          .select(
+            "id, order_id, user_id, order_status"
+          )
+          .eq("order_id", orderId)
           .eq("user_id", userEmail)
           .single();
 
-      if (findError || !booking) {
+      if (findError || !order) {
         console.error(
-          "Reservation not found:",
-          findError,
+          "Order not found:",
+          findError
         );
 
         alert(
-          "This booking could not be found.",
+          "This order could not be found."
         );
 
         return;
       }
 
-      // Do not allow cancellation
-      // after completion/cancellation.
+      if (
+        order.order_status === "Delivered" ||
+        order.order_status === "Cancelled"
+      ) {
+        alert(
+          "This order can no longer be cancelled."
+        );
+
+        return;
+      }
+
+      const { error: updateError } =
+        await supabase
+          .from("orders")
+          .update({
+            order_status: "Cancelled",
+          })
+          .eq("id", order.id)
+          .eq("user_id", userEmail);
+
+      if (updateError) {
+        console.error(
+          "Order cancel error:",
+          updateError
+        );
+
+        alert(
+          "Order could not be cancelled. Please try again."
+        );
+
+        return;
+      }
+
+      await loadOrders(
+        loggedInUser,
+        false
+      );
+
+      window.dispatchEvent(
+        new Event("riyaOrderUpdated")
+      );
+
+      alert(
+        "Order cancelled successfully."
+      );
+    } catch (error) {
+      console.error(
+        "Cancel order error:",
+        error
+      );
+
+      alert(
+        "Something went wrong. Please try again."
+      );
+    }
+  };
+
+  // =====================================================
+  // CANCEL RESERVATION
+  // =====================================================
+
+  const cancelReservation = async (
+    bookingId
+  ) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to cancel this table reservation?"
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const userEmail =
+        loggedInUser?.email
+          ?.trim()
+          .toLowerCase();
+
+      if (!userEmail) return;
+
+      const {
+        data: booking,
+        error: findError,
+      } = await supabase
+        .from("reservations")
+        .select(
+          "id, booking_id, user_id, status"
+        )
+        .eq("booking_id", bookingId)
+        .eq("user_id", userEmail)
+        .single();
+
+      if (findError || !booking) {
+        console.error(
+          "Reservation not found:",
+          findError
+        );
+
+        alert(
+          "This booking could not be found."
+        );
+
+        return;
+      }
+
       if (
         booking.status === "Completed" ||
         booking.status === "Cancelled"
       ) {
         alert(
-          "This booking can no longer be cancelled.",
+          "This booking can no longer be cancelled."
         );
 
         return;
@@ -332,36 +616,40 @@ function MyAccount() {
       if (updateError) {
         console.error(
           "Reservation cancel error:",
-          updateError,
+          updateError
         );
 
         alert(
-          "Booking could not be cancelled. Please try again.",
+          "Booking could not be cancelled. Please try again."
         );
 
         return;
       }
 
-      await loadReservations(loggedInUser);
+      await loadReservations(
+        loggedInUser,
+        false
+      );
 
       window.dispatchEvent(
-        new Event("riyaReservationUpdated"),
+        new Event("riyaReservationUpdated")
       );
     } catch (error) {
       console.error(
         "Cancel reservation error:",
-        error,
+        error
       );
 
       alert(
-        "Something went wrong. Please try again.",
+        "Something went wrong. Please try again."
       );
     }
   };
 
-  // =========================
+  // =====================================================
   // FORMAT DATE
-  // =========================
+  // =====================================================
+
   const formatDate = (date) => {
     if (!date) return "—";
 
@@ -377,13 +665,14 @@ function MyAccount() {
         day: "2-digit",
         month: "short",
         year: "numeric",
-      },
+      }
     );
   };
 
-  // =========================
+  // =====================================================
   // FORMAT TIME
-  // =========================
+  // =====================================================
+
   const formatTime = (time) => {
     if (!time) return "—";
 
@@ -396,7 +685,7 @@ function MyAccount() {
       Number(hours),
       Number(minutes),
       0,
-      0,
+      0
     );
 
     return date.toLocaleTimeString(
@@ -404,14 +693,17 @@ function MyAccount() {
       {
         hour: "2-digit",
         minute: "2-digit",
-      },
+      }
     );
   };
 
-  // =========================
+  // =====================================================
   // ORDER STATUS CLASS
-  // =========================
-  const getOrderStatusClass = (status) => {
+  // =====================================================
+
+  const getOrderStatusClass = (
+    status
+  ) => {
     switch (status) {
       case "Confirmed":
         return "account-status confirmed";
@@ -433,11 +725,12 @@ function MyAccount() {
     }
   };
 
-  // =========================
+  // =====================================================
   // RESERVATION STATUS CLASS
-  // =========================
+  // =====================================================
+
   const getReservationStatusClass = (
-    status,
+    status
   ) => {
     switch (status) {
       case "Confirmed":
@@ -454,23 +747,26 @@ function MyAccount() {
     }
   };
 
-  // =========================
+  // =====================================================
   // SORT ORDERS
-  // =========================
+  // =====================================================
+
   const activeOrders = useMemo(() => {
-    return [...orders].reverse();
+    return [...orders];
   }, [orders]);
 
-  // =========================
+  // =====================================================
   // SORT RESERVATIONS
-  // =========================
+  // =====================================================
+
   const activeReservations = useMemo(() => {
     return reservations;
   }, [reservations]);
 
-  // =========================
+  // =====================================================
   // NOT LOGGED IN
-  // =========================
+  // =====================================================
+
   if (!loggedInUser) {
     return (
       <>
@@ -485,8 +781,8 @@ function MyAccount() {
             <h3>Please Login</h3>
 
             <p>
-              Login to view your orders and table
-              bookings.
+              Login to view your orders and
+              table bookings.
             </p>
 
             <button
@@ -509,9 +805,8 @@ function MyAccount() {
 
       <main className="my-account-page">
 
-        {/* =========================
-            HERO
-        ========================= */}
+        {/* HERO */}
+
         <section className="account-hero">
           <p className="account-label">
             RIYA SWEETS
@@ -525,31 +820,36 @@ function MyAccount() {
               {loggedInUser.name ||
                 "Customer"}
             </strong>
-            . Track your orders and manage your
-            table reservations from one place.
+            . Track your orders and manage
+            your table reservations from one
+            place.
           </p>
         </section>
 
-        {/* =========================
-            PROFILE SUMMARY
-        ========================= */}
-        <section className="account-profile">
+        {/* PROFILE */}
 
+        <section className="account-profile">
           <div className="profile-avatar">
-            {(loggedInUser.name || "G")
+            {(
+              loggedInUser.name || "G"
+            )
               .charAt(0)
               .toUpperCase()}
           </div>
 
           <div className="profile-info">
-            <span>WELCOME BACK</span>
+            <span>
+              WELCOME BACK
+            </span>
 
             <h2>
               {loggedInUser.name ||
                 "Customer"}
             </h2>
 
-            <p>{loggedInUser.email}</p>
+            <p>
+              {loggedInUser.email}
+            </p>
 
             {loggedInUser.phone && (
               <p>
@@ -577,9 +877,8 @@ function MyAccount() {
           </div>
         </section>
 
-        {/* =========================
-            TABS
-        ========================= */}
+        {/* TABS */}
+
         <section className="account-tabs">
 
           <button
@@ -595,7 +894,9 @@ function MyAccount() {
             <span>🛒</span>
 
             <div>
-              <strong>My Orders</strong>
+              <strong>
+                My Orders
+              </strong>
 
               <small>
                 {orders.length}{" "}
@@ -608,15 +909,12 @@ function MyAccount() {
 
           <button
             className={
-              activeTab ===
-              "reservations"
+              activeTab === "reservations"
                 ? "account-tab active"
                 : "account-tab"
             }
             onClick={() =>
-              setActiveTab(
-                "reservations",
-              )
+              setActiveTab("reservations")
             }
           >
             <span>📅</span>
@@ -634,11 +932,11 @@ function MyAccount() {
               </small>
             </div>
           </button>
+
         </section>
 
-        {/* =========================
-            ORDERS
-        ========================= */}
+        {/* ORDERS */}
+
         {activeTab === "orders" && (
           <section className="account-content">
 
@@ -661,19 +959,35 @@ function MyAccount() {
               </button>
             </div>
 
-            {activeOrders.length === 0 ? (
+            {loadingOrders &&
+            activeOrders.length === 0 ? (
               <div className="account-empty">
+                <div className="empty-account-icon">
+                  ⏳
+                </div>
 
+                <h3>
+                  Loading orders...
+                </h3>
+
+                <p>
+                  Please wait while we load
+                  your orders.
+                </p>
+              </div>
+            ) : activeOrders.length === 0 ? (
+              <div className="account-empty">
                 <div className="empty-account-icon">
                   🛒
                 </div>
 
-                <h3>No orders yet</h3>
+                <h3>
+                  No orders yet
+                </h3>
 
                 <p>
-                  Your food orders will
-                  appear here after you
-                  place an order.
+                  Your food orders will appear
+                  here after you place an order.
                 </p>
 
                 <button
@@ -695,9 +1009,9 @@ function MyAccount() {
                       key={order.orderId}
                     >
 
-                      {/* ORDER HEADER */}
-                      <div className="account-card-header">
+                      {/* HEADER */}
 
+                      <div className="account-card-header">
                         <div>
                           <span className="account-card-label">
                             ORDER ID
@@ -709,14 +1023,14 @@ function MyAccount() {
 
                           <p>
                             {formatDate(
-                              order.createdAt,
+                              order.createdAt
                             )}
                           </p>
                         </div>
 
                         <span
                           className={getOrderStatusClass(
-                            order.status,
+                            order.status
                           )}
                         >
                           {order.status ||
@@ -724,13 +1038,14 @@ function MyAccount() {
                         </span>
                       </div>
 
-                      {/* ORDER ITEMS */}
+                      {/* ITEMS */}
+
                       <div className="order-items">
 
                         {order.items?.map(
                           (
                             item,
-                            index,
+                            index
                           ) => (
                             <div
                               className="order-item"
@@ -738,7 +1053,6 @@ function MyAccount() {
                             >
 
                               <div className="order-item-image">
-
                                 {item.image ? (
                                   <img
                                     src={
@@ -756,7 +1070,6 @@ function MyAccount() {
                               </div>
 
                               <div className="order-item-info">
-
                                 <strong>
                                   {item.name}
                                 </strong>
@@ -765,27 +1078,29 @@ function MyAccount() {
                                   ₹
                                   {item.price}{" "}
                                   ×{" "}
-                                  {
-                                    item.quantity
-                                  }
+                                  {item.quantity}
                                 </span>
                               </div>
 
                               <strong>
                                 ₹
                                 {Number(
-                                  item.price,
+                                  item.price || 0
                                 ) *
                                   Number(
-                                    item.quantity,
+                                    item.quantity ||
+                                      0
                                   )}
                               </strong>
+
                             </div>
-                          ),
+                          )
                         )}
+
                       </div>
 
-                      {/* ORDER TOTAL */}
+                      {/* TOTAL */}
+
                       <div className="order-summary">
 
                         <div>
@@ -795,8 +1110,10 @@ function MyAccount() {
 
                           <strong>
                             ₹
-                            {order.subtotal ||
-                              0}
+                            {Number(
+                              order.subtotal ||
+                                0
+                            )}
                           </strong>
                         </div>
 
@@ -807,62 +1124,64 @@ function MyAccount() {
 
                           <strong>
                             ₹
-                            {order.deliveryCharge ||
-                              0}
+                            {Number(
+                              order.deliveryCharge ||
+                                0
+                            )}
                           </strong>
                         </div>
 
                         <div className="order-total">
-
                           <span>
                             Total
                           </span>
 
                           <strong>
                             ₹
-                            {order.total ||
-                              0}
+                            {Number(
+                              order.total || 0
+                            )}
                           </strong>
                         </div>
+
                       </div>
 
-                      {/* CANCEL ORDER */}
+                      {/* CANCEL */}
+
                       {order.status !==
                         "Delivered" &&
                         order.status !==
                           "Cancelled" && (
                           <div className="account-card-actions">
-
                             <button
                               className="cancel-button"
                               onClick={() =>
                                 cancelOrder(
-                                  order.orderId,
+                                  order.orderId
                                 )
                               }
                             >
                               Cancel Order
                             </button>
-
                           </div>
                         )}
+
                     </article>
-                  ),
+                  )
                 )}
+
               </div>
             )}
+
           </section>
         )}
 
-        {/* =========================
-            RESERVATIONS
-        ========================= */}
-        {activeTab ===
-          "reservations" && (
+        {/* RESERVATIONS */}
+
+        {activeTab === "reservations" && (
           <section className="account-content">
 
             <div className="content-heading">
-
               <div>
                 <p className="content-label">
                   RESERVATION HISTORY
@@ -876,9 +1195,7 @@ function MyAccount() {
               <button
                 className="account-action-button"
                 onClick={() =>
-                  navigate(
-                    "/reservation",
-                  )
+                  navigate("/reservation")
                 }
               >
                 Book a Table →
@@ -897,14 +1214,12 @@ function MyAccount() {
                 </h3>
 
                 <p>
-                  Please wait while we
-                  load your bookings.
+                  Please wait while we load
+                  your bookings.
                 </p>
               </div>
-            ) : activeReservations.length ===
-              0 ? (
+            ) : activeReservations.length === 0 ? (
               <div className="account-empty">
-
                 <div className="empty-account-icon">
                   📅
                 </div>
@@ -914,16 +1229,14 @@ function MyAccount() {
                 </h3>
 
                 <p>
-                  Your table reservations
-                  will appear here.
+                  Your table reservations will
+                  appear here.
                 </p>
 
                 <button
                   className="account-primary-button"
                   onClick={() =>
-                    navigate(
-                      "/reservation",
-                    )
+                    navigate("/reservation")
                   }
                 >
                   Reserve a Table
@@ -941,11 +1254,10 @@ function MyAccount() {
                       }
                     >
 
-                      {/* BOOKING HEADER */}
+                      {/* HEADER */}
+
                       <div className="account-card-header">
-
                         <div>
-
                           <span className="account-card-label">
                             BOOKING ID
                           </span>
@@ -959,14 +1271,14 @@ function MyAccount() {
                           <p>
                             Created{" "}
                             {formatDate(
-                              reservation.createdAt,
+                              reservation.createdAt
                             )}
                           </p>
                         </div>
 
                         <span
                           className={getReservationStatusClass(
-                            reservation.status,
+                            reservation.status
                           )}
                         >
                           {reservation.status ||
@@ -975,13 +1287,13 @@ function MyAccount() {
                       </div>
 
                       {/* CUSTOMER */}
+
                       <div className="booking-customer">
 
                         <div className="booking-avatar">
                           {(
                             reservation
-                              .customer
-                              ?.name ||
+                              .customer?.name ||
                             "G"
                           )
                             .charAt(0)
@@ -989,7 +1301,6 @@ function MyAccount() {
                         </div>
 
                         <div>
-
                           <strong>
                             {reservation
                               .customer
@@ -1005,9 +1316,11 @@ function MyAccount() {
                               "No phone"}
                           </span>
                         </div>
+
                       </div>
 
-                      {/* BOOKING DETAILS */}
+                      {/* DETAILS */}
+
                       <div className="booking-details">
 
                         <div>
@@ -1017,7 +1330,7 @@ function MyAccount() {
 
                           <strong>
                             {formatDate(
-                              reservation.date,
+                              reservation.date
                             )}
                           </strong>
                         </div>
@@ -1029,7 +1342,7 @@ function MyAccount() {
 
                           <strong>
                             {formatTime(
-                              reservation.time,
+                              reservation.time
                             )}
                           </strong>
                         </div>
@@ -1040,9 +1353,7 @@ function MyAccount() {
                           </span>
 
                           <strong>
-                            {
-                              reservation.guests
-                            }
+                            {reservation.guests}
                           </strong>
                         </div>
 
@@ -1052,17 +1363,16 @@ function MyAccount() {
                           </span>
 
                           <strong>
-                            {
-                              reservation.table
-                            }
+                            {reservation.table}
                           </strong>
                         </div>
+
                       </div>
 
-                      {/* SPECIAL REQUEST */}
+                      {/* REQUEST */}
+
                       {reservation.request && (
                         <div className="booking-request">
-
                           <span>
                             ✦ Special Request
                           </span>
@@ -1075,33 +1385,36 @@ function MyAccount() {
                         </div>
                       )}
 
-                      {/* CANCEL BOOKING */}
+                      {/* CANCEL */}
+
                       {reservation.status !==
                         "Completed" &&
                         reservation.status !==
                           "Cancelled" && (
                           <div className="account-card-actions">
-
                             <button
                               className="cancel-button"
                               onClick={() =>
                                 cancelReservation(
-                                  reservation.bookingId,
+                                  reservation.bookingId
                                 )
                               }
                             >
                               Cancel Booking
                             </button>
-
                           </div>
                         )}
+
                     </article>
-                  ),
+                  )
                 )}
+
               </div>
             )}
+
           </section>
         )}
+
       </main>
     </>
   );

@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
+
 import { Routes, Route, useLocation, Navigate } from "react-router-dom";
+
+import { supabase } from "./lib/supabase";
 
 import "./App.css";
 
@@ -22,27 +25,55 @@ import AdminOrders from "./AdminOrders";
 import AdminMenu from "./AdminMenu";
 import AdminGallery from "./AdminGallery";
 import AdminReservations from "./AdminReservations";
-import AdminMessages from "./Messages";
 import Users from "./Users";
 import UserDetails from "./UserDetails";
 import Settings from "./Settings";
+import ResetPassword from "./ResetPassword";
 
 // =========================
 // PROTECTED ADMIN ROUTE
 // =========================
 
-
 function ProtectedAdmin({ children }) {
-  const isLoggedIn =
-    localStorage.getItem("riyaAdminLoggedIn") === "true";
+  const [session, setSession] = useState(undefined);
 
-  if (!isLoggedIn) {
+  useEffect(() => {
+    let mounted = true;
+
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession();
+
+      if (mounted) {
+        setSession(data.session);
+      }
+    };
+
+    checkSession();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession);
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  // Session check होने तक कुछ मत दिखाओ
+  if (session === undefined) {
+    return <Loading />;
+  }
+
+  // Login नहीं है
+  if (!session) {
     return <Navigate to="/admin/login" replace />;
   }
 
   return children;
 }
-
 
 // =========================
 // APP CONTENT
@@ -51,9 +82,7 @@ function ProtectedAdmin({ children }) {
 function AppContent() {
   const location = useLocation();
 
-  const [isLoading, setIsLoading] = useState(
-    location.pathname === "/"
-  );
+  const [isLoading, setIsLoading] = useState(location.pathname === "/");
 
   useEffect(() => {
     if (location.pathname === "/") {
@@ -93,22 +122,14 @@ function AppContent() {
 
       <Route path="/register" element={<Register />} />
 
-      <Route
-        path="/reservation"
-        element={<Reservation />}
-      />
+      <Route path="/reservation" element={<Reservation />} />
 
-      <Route
-        path="/my-account"
-        element={<MyAccount />}
-      />
+      <Route path="/my-account" element={<MyAccount />} />
+      <Route path="/admin/reset-password" element={<ResetPassword />} />
 
       {/* ================= ADMIN LOGIN ================= */}
 
-      <Route
-        path="/admin/login"
-        element={<AdminLogin />}
-      />
+      <Route path="/admin/login" element={<AdminLogin />} />
 
       {/* ================= ADMIN DASHBOARD ================= */}
 
@@ -165,17 +186,6 @@ function AppContent() {
         }
       />
 
-      {/* ================= ADMIN MESSAGES ================= */}
-
-      <Route
-        path="/admin/messages"
-        element={
-          <ProtectedAdmin>
-            <AdminMessages />
-          </ProtectedAdmin>
-        }
-      />
-
       {/* ================= ADMIN USERS ================= */}
 
       <Route
@@ -211,17 +221,11 @@ function AppContent() {
 
       {/* ================= LOADING ================= */}
 
-      <Route
-        path="/loading"
-        element={<Loading />}
-      />
+      <Route path="/loading" element={<Loading />} />
 
       {/* ================= 404 ================= */}
 
-      <Route
-        path="*"
-        element={<Navigate to="/" replace />}
-      />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

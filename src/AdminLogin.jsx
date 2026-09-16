@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "./lib/supabase";
 import "./AdminLogin.css";
 
 function AdminLogin() {
@@ -11,29 +12,59 @@ function AdminLogin() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e) => {
-    e.preventDefault();
+  const handleLogin = async (e) => {
+  e.preventDefault();
 
-    setError("");
-    setLoading(true);
+  setError("");
+  setLoading(true);
 
-    const adminUsername = "admin";
-    const adminPassword = "admin123";
+  const adminUsername = "RiyaAdmin";
+  const adminEmail = "rajutiwari49017@gmail.com";
 
-    if (
-      username.trim() === adminUsername &&
-      password === adminPassword
-    ) {
-      localStorage.setItem("riyaAdminLoggedIn", "true");
+  // Username check - case insensitive
+  if (
+    username.trim().toLowerCase() !==
+    adminUsername.toLowerCase()
+  ) {
+    setLoading(false);
+    setError("Invalid username or password");
+    return;
+  }
 
-      setTimeout(() => {
-        navigate("/admin", { replace: true });
-      }, 300);
-    } else {
+  try {
+    const { data, error: loginError } =
+      await supabase.auth.signInWithPassword({
+        email: adminEmail,
+        password: password,
+      });
+
+    // IMPORTANT: Browser Console में actual Supabase error देखेंगे
+    if (loginError) {
+      console.error(
+        "SUPABASE LOGIN ERROR:",
+        loginError
+      );
+
       setLoading(false);
-      setError("Invalid username or password");
+      setError(loginError.message);
+      return;
     }
-  };
+
+    console.log("ADMIN LOGIN SUCCESS:", data.user);
+
+    navigate("/admin", {
+      replace: true,
+    });
+  } catch (err) {
+    console.error(
+      "ADMIN LOGIN EXCEPTION:",
+      err
+    );
+
+    setLoading(false);
+    setError("Something went wrong. Please try again.");
+  }
+};
 
   return (
     <div className="admin-login-page">
@@ -51,8 +82,10 @@ function AdminLogin() {
         </div>
 
         {/* Login Form */}
-        <form onSubmit={handleLogin} className="admin-login-form">
-
+        <form
+          onSubmit={handleLogin}
+          className="admin-login-form"
+        >
           {/* Username */}
           <div className="admin-form-group">
             <label htmlFor="admin-username">
@@ -60,14 +93,18 @@ function AdminLogin() {
             </label>
 
             <div className="admin-input-wrapper">
-              <span className="admin-input-icon">👤</span>
+              <span className="admin-input-icon">
+                👤
+              </span>
 
               <input
                 id="admin-username"
                 type="text"
                 placeholder="Enter username"
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                onChange={(e) =>
+                  setUsername(e.target.value)
+                }
                 autoComplete="username"
                 required
               />
@@ -81,14 +118,22 @@ function AdminLogin() {
             </label>
 
             <div className="admin-input-wrapper">
-              <span className="admin-input-icon">🔒</span>
+              <span className="admin-input-icon">
+                🔒
+              </span>
 
               <input
                 id="admin-password"
-                type={showPassword ? "text" : "password"}
+                type={
+                  showPassword
+                    ? "text"
+                    : "password"
+                }
                 placeholder="Enter password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) =>
+                  setPassword(e.target.value)
+                }
                 autoComplete="current-password"
                 required
               />
@@ -96,7 +141,9 @@ function AdminLogin() {
               <button
                 type="button"
                 className="show-password-btn"
-                onClick={() => setShowPassword(!showPassword)}
+                onClick={() =>
+                  setShowPassword(!showPassword)
+                }
                 aria-label={
                   showPassword
                     ? "Hide password"

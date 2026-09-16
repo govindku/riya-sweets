@@ -9,7 +9,6 @@ function Admin() {
   const [orders, setOrders] = useState([]);
   const [users, setUsers] = useState([]);
   const [menu, setMenu] = useState([]);
-  const [messages, setMessages] = useState([]);
   const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -36,6 +35,7 @@ function Admin() {
       : [],
 
     subtotal: Number(order.subtotal || 0),
+
     deliveryCharge:
       order.delivery_charge !== null &&
       order.delivery_charge !== undefined
@@ -64,7 +64,7 @@ function Admin() {
   });
 
   // =====================================================
-  // LOAD ORDERS FROM SUPABASE
+  // LOAD ORDERS
   // =====================================================
 
   const loadOrders = async () => {
@@ -84,13 +84,11 @@ function Admin() {
         return;
       }
 
-      const mappedOrders = (data || []).map(
-        mapOrder
-      );
+      const mappedOrders =
+        (data || []).map(mapOrder);
 
       setOrders(mappedOrders);
 
-      // Compatibility with existing components
       localStorage.setItem(
         "riyaOrders",
         JSON.stringify(mappedOrders)
@@ -134,7 +132,6 @@ function Admin() {
           error
         );
 
-        // Fallback to localStorage
         const savedMenu = JSON.parse(
           localStorage.getItem(
             "riyaMenu"
@@ -145,8 +142,8 @@ function Admin() {
         return;
       }
 
-      const mappedMenu = (data || []).map(
-        (item) => ({
+      const mappedMenu =
+        (data || []).map((item) => ({
           id: item.id,
           name: item.name,
           category: item.category,
@@ -159,8 +156,7 @@ function Admin() {
             item.available !== false,
           popular:
             item.is_popular === true,
-        })
-      );
+        }));
 
       setMenu(mappedMenu);
 
@@ -177,151 +173,107 @@ function Admin() {
   };
 
   // =====================================================
-  // LOAD MESSAGES
+  // LOAD RESERVATIONS
   // =====================================================
 
-  const loadMessages = async () => {
+  const loadReservations = async () => {
     try {
-      const { data, error } = await supabase
-        .from("messages")
-        .select("*")
-        .order("created_at", {
-          ascending: false,
-        });
+      const { data, error } =
+        await supabase
+          .from("reservations")
+          .select("*")
+          .order("created_at", {
+            ascending: false,
+          });
 
       if (error) {
         console.error(
-          "Messages loading error:",
+          "Reservations loading error:",
           error
         );
 
-        const savedMessages =
+        const savedReservations =
           JSON.parse(
             localStorage.getItem(
-              "riyaMessages"
+              "riyaReservations"
             ) || "[]"
           );
 
-        setMessages(savedMessages);
+        setReservations(
+          savedReservations
+        );
+
         return;
       }
 
-      const mappedMessages =
-        data || [];
+      const mappedReservations =
+        (data || []).map(
+          (reservation) => ({
+            id: reservation.id,
 
-      setMessages(mappedMessages);
+            bookingId:
+              reservation.booking_id,
+
+            userId:
+              reservation.user_id,
+
+            customer: {
+              name:
+                reservation.customer_name ||
+                "",
+
+              phone:
+                reservation.customer_phone ||
+                "",
+
+              email:
+                reservation.customer_email ||
+                "",
+            },
+
+            date:
+              reservation.reservation_date,
+
+            time:
+              reservation.reservation_time,
+
+            guests:
+              reservation.guests || 2,
+
+            table:
+              reservation.table_preference ||
+              "Indoor",
+
+            request:
+              reservation.special_request ||
+              "",
+
+            status:
+              reservation.status ||
+              "Pending",
+
+            createdAt:
+              reservation.created_at,
+          })
+        );
+
+      setReservations(
+        mappedReservations
+      );
 
       localStorage.setItem(
-        "riyaMessages",
-        JSON.stringify(mappedMessages)
+        "riyaReservations",
+        JSON.stringify(
+          mappedReservations
+        )
       );
     } catch (error) {
       console.error(
-        "Messages error:",
+        "Reservations error:",
         error
       );
     }
   };
-
-  // =====================================================
-  // LOAD RESERVATIONS
-  // =====================================================
-
-  const loadReservations =
-    async () => {
-      try {
-        const { data, error } =
-          await supabase
-            .from("reservations")
-            .select("*")
-            .order("created_at", {
-              ascending: false,
-            });
-
-        if (error) {
-          console.error(
-            "Reservations loading error:",
-            error
-          );
-
-          const savedReservations =
-            JSON.parse(
-              localStorage.getItem(
-                "riyaReservations"
-              ) || "[]"
-            );
-
-          setReservations(
-            savedReservations
-          );
-
-          return;
-        }
-
-        const mappedReservations =
-          (data || []).map(
-            (reservation) => ({
-              id: reservation.id,
-              bookingId:
-                reservation.booking_id,
-              userId:
-                reservation.user_id,
-
-              customer: {
-                name:
-                  reservation.customer_name ||
-                  "",
-                phone:
-                  reservation.customer_phone ||
-                  "",
-                email:
-                  reservation.customer_email ||
-                  "",
-              },
-
-              date:
-                reservation.reservation_date,
-
-              time:
-                reservation.reservation_time,
-
-              guests:
-                reservation.guests || 2,
-
-              table:
-                reservation.table_preference ||
-                "Indoor",
-
-              request:
-                reservation.special_request ||
-                "",
-
-              status:
-                reservation.status ||
-                "Pending",
-
-              createdAt:
-                reservation.created_at,
-            })
-          );
-
-        setReservations(
-          mappedReservations
-        );
-
-        localStorage.setItem(
-          "riyaReservations",
-          JSON.stringify(
-            mappedReservations
-          )
-        );
-      } catch (error) {
-        console.error(
-          "Reservations error:",
-          error
-        );
-      }
-    };
 
   // =====================================================
   // LOAD ALL DATA
@@ -334,7 +286,6 @@ function Admin() {
       await Promise.all([
         loadOrders(),
         loadMenu(),
-        loadMessages(),
         loadReservations(),
       ]);
 
@@ -375,18 +326,9 @@ function Admin() {
       handleUpdate
     );
 
-    window.addEventListener(
-      "riyaMessagesUpdated",
-      handleUpdate
-    );
-
-    // Refresh every 5 seconds
-    const interval = setInterval(
-      () => {
-        loadData();
-      },
-      5000
-    );
+    const interval = setInterval(() => {
+      loadData();
+    }, 5000);
 
     return () => {
       window.removeEventListener(
@@ -406,11 +348,6 @@ function Admin() {
 
       window.removeEventListener(
         "riyaMenuUpdated",
-        handleUpdate
-      );
-
-      window.removeEventListener(
-        "riyaMessagesUpdated",
         handleUpdate
       );
 
@@ -456,16 +393,6 @@ function Admin() {
     ).length;
 
   // =====================================================
-  // NEW MESSAGES
-  // =====================================================
-
-  const newMessages =
-    messages.filter(
-      (message) =>
-        message.status === "New"
-    ).length;
-
-  // =====================================================
   // RESERVATION STATS
   // =====================================================
 
@@ -490,13 +417,6 @@ function Admin() {
         "Completed"
     ).length;
 
-  const cancelledReservations =
-    reservations.filter(
-      (reservation) =>
-        reservation.status ===
-        "Cancelled"
-    ).length;
-
   // =====================================================
   // RECENT ORDERS
   // =====================================================
@@ -517,9 +437,7 @@ function Admin() {
   // FORMAT CURRENCY
   // =====================================================
 
-  const formatCurrency = (
-    amount
-  ) => {
+  const formatCurrency = (amount) => {
     return Number(
       amount || 0
     ).toLocaleString("en-IN");
@@ -558,9 +476,7 @@ function Admin() {
   // STATUS CLASS
   // =====================================================
 
-  const getStatusClass = (
-    status
-  ) => {
+  const getStatusClass = (status) => {
     return (
       status
         ?.toLowerCase()
@@ -571,17 +487,21 @@ function Admin() {
 
   return (
     <div className="admin-layout">
+
       {/* SIDEBAR */}
 
       <aside className="admin-sidebar">
+
         <div className="admin-logo">
           <span>RIYA</span>
+
           <small>
             RESTAURANT ADMIN
           </small>
         </div>
 
         <nav className="admin-nav">
+
           {/* Dashboard */}
 
           <button
@@ -597,7 +517,9 @@ function Admin() {
 
           <button
             onClick={() =>
-              navigate("/admin/orders")
+              navigate(
+                "/admin/orders"
+              )
             }
           >
             🛒 Orders
@@ -613,7 +535,9 @@ function Admin() {
 
           <button
             onClick={() =>
-              navigate("/admin/users")
+              navigate(
+                "/admin/users"
+              )
             }
           >
             👥 Users
@@ -636,6 +560,7 @@ function Admin() {
             className="admin-sidebar-link"
           >
             <span>📅</span>
+
             <span>
               Reservations
             </span>
@@ -650,29 +575,13 @@ function Admin() {
             )}
           </button>
 
-          {/* Messages */}
-
-          <button
-            onClick={() =>
-              navigate(
-                "/admin/messages"
-              )
-            }
-          >
-            📩 Messages
-
-            {newMessages > 0 && (
-              <span className="nav-badge">
-                {newMessages}
-              </span>
-            )}
-          </button>
-
           {/* Menu */}
 
           <button
             onClick={() =>
-              navigate("/admin/menu")
+              navigate(
+                "/admin/menu"
+              )
             }
           >
             🍔 Menu
@@ -718,6 +627,7 @@ function Admin() {
           >
             🚪 Logout
           </button>
+
         </nav>
 
         <div className="admin-sidebar-bottom">
@@ -729,14 +639,17 @@ function Admin() {
             Admin Panel
           </small>
         </div>
+
       </aside>
 
       {/* MAIN */}
 
       <main className="admin-main">
+
         {/* TOPBAR */}
 
         <div className="admin-topbar">
+
           <div>
             <p>DASHBOARD</p>
 
@@ -754,11 +667,13 @@ function Admin() {
               ? "Loading..."
               : "↻ Refresh"}
           </button>
+
         </div>
 
         {/* STATS */}
 
         <div className="dashboard-stats">
+
           {/* Orders */}
 
           <div
@@ -808,6 +723,7 @@ function Admin() {
           {/* Revenue */}
 
           <div className="dashboard-card">
+
             <span>
               💰 Total Revenue
             </span>
@@ -822,6 +738,7 @@ function Admin() {
             <small>
               From all orders
             </small>
+
           </div>
 
           {/* Pending Orders */}
@@ -866,8 +783,7 @@ function Admin() {
             </strong>
 
             <small>
-              {pendingReservations >
-              0
+              {pendingReservations > 0
                 ? `${pendingReservations} pending request${
                     pendingReservations >
                     1
@@ -876,12 +792,15 @@ function Admin() {
                   } →`
                 : "View reservations →"}
             </small>
+
           </div>
+
         </div>
 
         {/* QUICK INFO */}
 
         <div className="dashboard-extra">
+
           {/* Menu */}
 
           <div className="extra-card">
@@ -902,6 +821,7 @@ function Admin() {
           {/* Delivered */}
 
           <div className="extra-card">
+
             <span>
               📦 Delivered Orders
             </span>
@@ -919,11 +839,13 @@ function Admin() {
             <small>
               Successfully completed
             </small>
+
           </div>
 
           {/* Cancelled */}
 
           <div className="extra-card">
+
             <span>
               ❌ Cancelled Orders
             </span>
@@ -941,29 +863,7 @@ function Admin() {
             <small>
               Cancelled orders
             </small>
-          </div>
 
-          {/* Messages */}
-
-          <div
-            className="extra-card clickable"
-            onClick={() =>
-              navigate(
-                "/admin/messages"
-              )
-            }
-          >
-            <span>
-              📩 New Messages
-            </span>
-
-            <strong>
-              {newMessages}
-            </strong>
-
-            <small>
-              View customer messages →
-            </small>
           </div>
 
           {/* Pending Reservations */}
@@ -991,12 +891,15 @@ function Admin() {
               completed
             </small>
           </div>
+
         </div>
 
         {/* RECENT ORDERS */}
 
         <section className="recent-orders">
+
           <div className="section-header">
+
             <div>
               <p>ORDERS</p>
 
@@ -1014,11 +917,13 @@ function Admin() {
             >
               View All →
             </button>
+
           </div>
 
           {recentOrders.length ===
           0 ? (
             <div className="empty-dashboard">
+
               <div className="empty-icon">
                 📦
               </div>
@@ -1031,11 +936,14 @@ function Admin() {
                 New customer orders
                 will appear here.
               </p>
+
             </div>
           ) : (
             <div className="recent-list">
+
               {recentOrders.map(
                 (order) => (
+
                   <div
                     className="recent-order"
                     key={
@@ -1047,9 +955,11 @@ function Admin() {
                       )
                     }
                   >
+
                     {/* Order ID */}
 
                     <div className="order-id-box">
+
                       <span>
                         ORDER ID
                       </span>
@@ -1065,11 +975,13 @@ function Admin() {
                           order.createdAt
                         )}
                       </small>
+
                     </div>
 
                     {/* Customer */}
 
                     <div>
+
                       <span>
                         CUSTOMER
                       </span>
@@ -1085,11 +997,13 @@ function Admin() {
                           ?.phone ||
                           ""}
                       </small>
+
                     </div>
 
                     {/* Amount */}
 
                     <div>
+
                       <span>
                         AMOUNT
                       </span>
@@ -1100,11 +1014,13 @@ function Admin() {
                           order.total
                         )}
                       </p>
+
                     </div>
 
                     {/* Status */}
 
                     <div>
+
                       <span>
                         STATUS
                       </span>
@@ -1117,6 +1033,7 @@ function Admin() {
                         {order.status ||
                           "Order Placed"}
                       </p>
+
                     </div>
 
                     {/* Arrow */}
@@ -1124,12 +1041,16 @@ function Admin() {
                     <div className="recent-arrow">
                       →
                     </div>
+
                   </div>
                 )
               )}
+
             </div>
           )}
+
         </section>
+
       </main>
     </div>
   );
